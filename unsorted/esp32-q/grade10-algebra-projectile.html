@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grade 10 Algebra — Projectile Motion</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0d1117;
+  color: #e6edf3;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+h1 { font-size: 1.4rem; font-weight: 600; color: #58a6ff; margin-bottom: 4px; }
+.subtitle { font-size: 0.82rem; color: #8b949e; margin-bottom: 24px; }
+
+.card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 20px;
+}
+.card h2 {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8b949e;
+  margin-bottom: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 16px;
+  max-width: 1100px;
+}
+
+/* ── Question panel ── */
+#question-card {
+  grid-column: 1 / -1;
+  border-left: 4px solid #58a6ff;
+}
+.question {
+  font-size: 1rem;
+  color: #c9d1d9;
+  line-height: 1.7;
+}
+.question strong { color: #58a6ff; }
+.question .formula {
+  display: inline-block;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-family: monospace;
+  margin: 4px 0;
+}
+
+/* ── Animation scene ── */
+#scene-card { grid-row: 2; grid-column: 1; }
+#scene {
+  width: 100%;
+  height: 320px;
+  background: linear-gradient(to bottom, #0d1117 0%, #0d1117 80%, #161b22 80%, #0d1117 100%);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ground {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 40px;
+  background: repeating-linear-gradient(90deg, #238636, #238636 20px, #2ea043 20px, #2ea043 40px);
+  opacity: 0.35;
+}
+
+.ball {
+  width: 18px;
+  height: 18px;
+  background: radial-gradient(circle at 35% 35%, #ffd166, #f9c74f, #e07b00);
+  border-radius: 50%;
+  position: absolute;
+  box-shadow: 0 0 10px rgba(249,199,79,0.6);
+  transform: translate(-50%, -50%);
+}
+
+.trail-dot {
+  width: 3px; height: 3px;
+  background: rgba(249,199,79,0.35);
+  border-radius: 50%;
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+#scene-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #6e7681;
+  margin-top: 8px;
+  font-family: monospace;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+button {
+  background: #238636;
+  border: none;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:hover { background: #2ea043; }
+button.secondary { background: #1f6feb; }
+button.secondary:hover { background: #388bfd; }
+button.danger { background: #da3633; }
+button.danger:hover { background: #f85149; }
+
+#time-display {
+  font-family: monospace;
+  font-size: 1rem;
+  color: #58a6ff;
+  font-weight: 700;
+  min-width: 110px;
+  text-align: center;
+  background: #0d1117;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+}
+
+/* ── Graph ── */
+#graph-card { grid-row: 3; grid-column: 1; }
+#graph-canvas {
+  width: 100%;
+  height: 240px;
+  background: #0d1117;
+  border-radius: 6px;
+  display: block;
+}
+
+/* ── Sliders / params ── */
+#param-card { grid-row: 2 / 4; grid-column: 2; }
+
+.control-row { margin-bottom: 22px; }
+.control-row:last-child { margin-bottom: 0; }
+
+.control-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+.control-label span:first-child { color: #c9d1d9; }
+.control-label .val {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #58a6ff;
+  font-variant-numeric: tabular-nums;
+}
+.control-label .unit { font-size: 0.72rem; color: #8b949e; }
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #30363d;
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: #58a6ff;
+  border: 2px solid #161b22;
+  box-shadow: 0 0 0 2px #58a6ff44;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+input[type=range]::-webkit-slider-thumb:hover { box-shadow: 0 0 0 4px #58a6ff44; }
+
+.range-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: #6e7681;
+  margin-top: 4px;
+  font-family: monospace;
+}
+
+.note {
+  font-size: 0.75rem;
+  color: #8b949e;
+  line-height: 1.5;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 16px;
+}
+.note strong { color: #c9d1d9; }
+
+/* ── Answer area ── */
+#answer-card {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+}
+
+.answers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.answer-block {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 14px;
+}
+.answer-block label {
+  display: block;
+  font-size: 0.82rem;
+  color: #8b949e;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.answer-block input {
+  width: 100%;
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #e6edf3;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.9rem;
+  outline: none;
+}
+.answer-block input:focus { border-color: #58a6ff; }
+.answer-block input.correct { border-color: #3fb950; background: #0d2818; }
+.answer-block input.wrong { border-color: #f85149; background: #2d0d0d; }
+
+.feedback {
+  font-size: 0.78rem;
+  margin-top: 8px;
+  min-height: 1.4em;
+  font-weight: 600;
+}
+.feedback.correct { color: #3fb950; }
+.feedback.wrong { color: #f85149; }
+
+/* ── Solution ── */
+#solution-card { display: none; }
+#solution-card.open { display: block; }
+
+.solution-step {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 18px;
+  align-items: flex-start;
+}
+.solution-step:last-child { margin-bottom: 0; }
+.step-num {
+  width: 26px; height: 26px; min-width: 26px;
+  background: #1f3a5f;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem; font-weight: 700; color: #58a6ff;
+}
+.solution-step h3 {
+  font-size: 0.86rem;
+  color: #58a6ff;
+  margin-bottom: 6px;
+}
+.solution-step p, .solution-step li {
+  font-size: 0.82rem;
+  color: #8b949e;
+  line-height: 1.7;
+}
+.solution-step li { margin-bottom: 4px; }
+.solution-step ul { padding-left: 16px; }
+.solution-step strong { color: #c9d1d9; }
+.solution-step .math {
+  font-family: monospace;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: inline-block;
+  margin: 6px 0;
+  color: #e6edf3;
+}
+.solution-step .answer {
+  color: #3fb950;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+/* ── Calculation cards ── */
+#live-calc {
+  margin-top: 8px;
+}
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.calc-card {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 12px;
+}
+.calc-card .name { font-size: 0.72rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.calc-card .value { font-size: 1rem; font-weight: 700; color: #58a6ff; font-family: monospace; }
+.calc-card .value.green { color: #3fb950; }
+.calc-card .value.yellow { color: #f9c74f; }
+</style>
+</head>
+<body>
+
+<h1>Grade 10 Algebra — Projectile Motion</h1>
+<p class="subtitle">Topic: Quadratic functions &nbsp;·&nbsp; Solving ax² + bx + c = 0 &nbsp;·&nbsp; Vertex of a parabola</p>
+
+<!-- Question -->
+<div class="card" id="question-card">
+  <h2>The Problem</h2>
+  <p class="question">
+    A ball is thrown vertically upward from a platform. Its height above the ground, in metres, after <em>t</em> seconds is modelled by the quadratic function:<br>
+    <span class="formula">h(t) = −4.9t² + <span id="q-v0">15</span>t + <span id="q-h0">2</span></span><br>
+    where <strong><span id="q-v0b">15</span> m/s</strong> is the initial upward velocity and <strong><span id="q-h0b">2</span> m</strong> is the initial height of the platform.<br><br>
+    Use the simulation and algebra to answer the following questions:
+  </p>
+  <ol class="question" style="margin-top:12px; padding-left:24px;">
+    <li>How many seconds after being thrown does the ball hit the ground? Round to two decimal places.</li>
+    <li>What is the maximum height reached by the ball? Round to two decimal places.</li>
+    <li>How many seconds after being thrown does the ball reach its maximum height? Round to two decimal places.</li>
+  </ol>
+</div>
+
+<div class="grid">
+
+  <!-- Animation scene -->
+  <div class="card" id="scene-card">
+    <h2>Live Animation</h2>
+    <div id="scene">
+      <div class="ground"></div>
+      <div class="ball" id="ball" style="left: 12%; bottom: 2px;"></div>
+    </div>
+    <div id="scene-labels">
+      <span>0 s</span>
+      <span>ground level (h = 0)</span>
+      <span id="total-time-label">total flight ≈ 3.20 s</span>
+    </div>
+    <div class="controls">
+      <button id="play-btn">Play</button>
+      <button id="reset-btn" class="danger">Reset</button>
+      <div id="time-display">t = 0.00 s</div>
+    </div>
+  </div>
+
+  <!-- Parameters -->
+  <div class="card" id="param-card">
+    <h2>Adjust the Problem</h2>
+
+    <div class="control-row">
+      <div class="control-label">
+        <span>Initial velocity (v₀)</span>
+        <span><span class="val" id="v0-val">15</span><span class="unit">m/s</span></span>
+      </div>
+      <input type="range" id="v0-slider" min="5" max="30" value="15" step="1">
+      <div class="range-ticks"><span>5</span><span>10</span><span>20</span><span>30</span></div>
+    </div>
+
+    <div class="control-row">
+      <div class="control-label">
+        <span>Initial height (h₀)</span>
+        <span><span class="val" id="h0-val">2</span><span class="unit">m</span></span>
+      </div>
+      <input type="range" id="h0-slider" min="0" max="20" value="2" step="1">
+      <div class="range-ticks"><span>0</span><span>5</span><span>10</span><span>20</span></div>
+    </div>
+
+    <div class="note">
+      <strong>Did you know?</strong> The −4.9 comes from gravity. On Earth, acceleration is −9.8 m/s², and the quadratic term is half of that because the equation is h(t) = ½at² + v₀t + h₀.
+    </div>
+  </div>
+
+  <!-- Graph -->
+  <div class="card" id="graph-card">
+    <h2>Height vs Time Graph</h2>
+    <canvas id="graph-canvas"></canvas>
+  </div>
+
+</div>
+
+<!-- Live calculations -->
+<div class="card" id="live-calc">
+  <h2>Live Values from the Equation</h2>
+  <div class="calc-grid">
+    <div class="calc-card"><div class="name">Equation</div><div class="value" id="eq-str">h(t) = -4.9t² + 15t + 2</div></div>
+    <div class="calc-card"><div class="name">a coefficient</div><div class="value">−4.9</div></div>
+    <div class="calc-card"><div class="name">b coefficient</div><div class="value" id="b-val">15</div></div>
+    <div class="calc-card"><div class="name">c coefficient</div><div class="value" id="c-val">2</div></div>
+    <div class="calc-card"><div class="name">Vertex time</div><div class="value yellow" id="vert-t">1.53 s</div></div>
+    <div class="calc-card"><div class="name">Max height</div><div class="value green" id="max-h">13.48 m</div></div>
+    <div class="calc-card"><div class="name">Time to hit ground</div><div class="value green" id="ground-t">3.19 s</div></div>
+    <div class="calc-card"><div class="name">Discriminant</div><div class="value" id="disc">240.2</div></div>
+  </div>
+</div>
+
+<!-- Answer area -->
+<div class="card" id="answer-card">
+  <h2>Your Answers</h2>
+  <div class="answers-grid">
+    <div class="answer-block">
+      <label>1. Time to hit the ground (seconds)</label>
+      <input type="number" id="ans-ground" step="0.01" placeholder="e.g. 3.19">
+      <div class="feedback" id="fb-ground"></div>
+    </div>
+    <div class="answer-block">
+      <label>2. Maximum height (metres)</label>
+      <input type="number" id="ans-maxh" step="0.01" placeholder="e.g. 13.48">
+      <div class="feedback" id="fb-maxh"></div>
+    </div>
+    <div class="answer-block">
+      <label>3. Time at maximum height (seconds)</label>
+      <input type="number" id="ans-vert" step="0.01" placeholder="e.g. 1.53">
+      <div class="feedback" id="fb-vert"></div>
+    </div>
+  </div>
+  <div class="controls" style="justify-content:flex-start;">
+    <button id="check-btn">Check Answers</button>
+    <button id="show-solution-btn" class="secondary">Show Full Solution</button>
+    <button id="new-params-btn">Randomise Values</button>
+  </div>
+</div>
+
+<!-- Full solution -->
+<div class="card" id="solution-card">
+  <h2>Worked Solution</h2>
+
+  <div class="solution-step">
+    <div class="step-num">1</div>
+    <div>
+      <h3>Identify the quadratic equation</h3>
+      <p>The height function is <span class="math">h(t) = −4.9t² + <span class="s-v0">15</span>t + <span class="s-h0">2</span></span>.</p>
+      <p>Compare this to the standard form <span class="math">at² + bt + c = 0</span>:</p>
+      <p><strong>a = −4.9</strong>, <strong>b = <span class="s-v0">15</span></strong>, <strong>c = <span class="s-h0">2</span></strong>.</p>
+    </div>
+  </div>
+
+  <div class="solution-step">
+    <div class="step-num">2</div>
+    <div>
+      <h3>Find when the ball hits the ground</h3>
+      <p>At ground level, <span class="math">h(t) = 0</span>. So we solve:</p>
+      <p class="math">−4.9t² + <span class="s-v0">15</span>t + <span class="s-h0">2</span> = 0</p>
+      <p>Use the quadratic formula: <span class="math">t = (−b ± √(b² − 4ac)) / 2a</span></p>
+      <p>Substitute the values:</p>
+      <p class="math">t = (−<span class="s-v0">15</span> ± √(<span class="s-v0">15</span>² − 4 × −4.9 × <span class="s-h0">2</span>)) / (2 × −4.9)</p>
+      <p class="math">t = (−<span class="s-v0">15</span> ± <span class="s-sqrt">16.50</span>) / −9.8</p>
+      <p>This gives two solutions. One is negative (before the throw) so we ignore it. The positive solution is:</p>
+      <p class="answer">Ground time ≈ <span class="s-ground">3.19</span> seconds</p>
+    </div>
+  </div>
+
+  <div class="solution-step">
+    <div class="step-num">3</div>
+    <div>
+      <h3>Find the time at maximum height</h3>
+      <p>For a parabola, the vertex occurs at <span class="math">t = −b / 2a</span>.</p>
+      <p class="math">t = −<span class="s-v0">15</span> / (2 × −4.9) = <span class="s-vert">1.53</span> s</p>
+      <p class="answer">Maximum height occurs at <span class="s-vert">1.53</span> seconds</p>
+    </div>
+  </div>
+
+  <div class="solution-step">
+    <div class="step-num">4</div>
+    <div>
+      <h3>Find the maximum height</h3>
+      <p>Substitute the vertex time back into the height equation:</p>
+      <p class="math">h(<span class="s-vert">1.53</span>) = −4.9(<span class="s-vert">1.53</span>)² + <span class="s-v0">15</span>(<span class="s-vert">1.53</span>) + <span class="s-h0">2</span></p>
+      <p class="answer">Maximum height ≈ <span class="s-maxh">13.48</span> metres</p>
+    </div>
+  </div>
+
+  <div class="solution-step">
+    <div class="step-num">5</div>
+    <div>
+      <h3>What the graph shows</h3>
+      <p>The curve is a downward-opening parabola. The <strong>roots</strong> (where it crosses the t-axis) tell us when the ball is at ground level. The <strong>vertex</strong> is the highest point. The part of the curve above the t-axis represents the time the ball is in the air.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const state = { v0: 15, h0: 2 };
+const GRAVITY = 9.8;
+let simTime = 0;
+let isPlaying = false;
+let animFrame = null;
+let lastTs = 0;
+
+// ── DOM ────────────────────────────────────────────────────────────────────
+const v0Slider = document.getElementById('v0-slider');
+const h0Slider = document.getElementById('h0-slider');
+const ball     = document.getElementById('ball');
+const scene    = document.getElementById('scene');
+const canvas   = document.getElementById('graph-canvas');
+const ctx      = canvas.getContext('2d');
+
+// ── Physics helpers ────────────────────────────────────────────────────────
+function height(t, v0, h0) {
+  return -0.5 * GRAVITY * t*t + v0 * t + h0;
+}
+
+function timeToGround(v0, h0) {
+  // -4.9 t^2 + v0 t + h0 = 0  →  t = (-v0 ± sqrt(v0^2 + 19.6 h0)) / -9.8
+  const a = -0.5 * GRAVITY;
+  const b = v0;
+  const c = h0;
+  const disc = b*b - 4*a*c;
+  const t1 = (-b + Math.sqrt(disc)) / (2*a);
+  const t2 = (-b - Math.sqrt(disc)) / (2*a);
+  return Math.max(t1, t2);
+}
+
+function vertexTime(v0) {
+  return v0 / GRAVITY;  // -b / 2a  with a=-4.9, b=v0
+}
+
+function maxHeight(v0, h0) {
+  const tv = vertexTime(v0);
+  return height(tv, v0, h0);
+}
+
+function discriminant(v0, h0) {
+  return v0*v0 + 2 * GRAVITY * h0;  // b^2 - 4ac with a=-4.9
+}
+
+// ── Update UI ──────────────────────────────────────────────────────────────
+function update() {
+  const { v0, h0 } = state;
+  const groundT = timeToGround(v0, h0);
+  const vertT   = vertexTime(v0);
+  const maxH    = maxHeight(v0, h0);
+  const disc    = discriminant(v0, h0);
+
+  // Labels
+  document.getElementById('v0-val').textContent = v0;
+  document.getElementById('h0-val').textContent = h0;
+  document.getElementById('q-v0').textContent = v0;
+  document.getElementById('q-v0b').textContent = v0;
+  document.getElementById('q-h0').textContent = h0;
+  document.getElementById('q-h0b').textContent = h0;
+
+  // Live calc
+  document.getElementById('eq-str').textContent = `h(t) = -4.9t² + ${v0}t + ${h0}`;
+  document.getElementById('b-val').textContent = v0;
+  document.getElementById('c-val').textContent = h0;
+  document.getElementById('vert-t').textContent = vertT.toFixed(2) + ' s';
+  document.getElementById('max-h').textContent = maxH.toFixed(2) + ' m';
+  document.getElementById('ground-t').textContent = groundT.toFixed(2) + ' s';
+  document.getElementById('disc').textContent = disc.toFixed(2);
+  document.getElementById('total-time-label').textContent = 'total flight ≈ ' + groundT.toFixed(2) + ' s';
+
+  // Solution spans
+  document.querySelectorAll('.s-v0').forEach(el => el.textContent = v0);
+  document.querySelectorAll('.s-h0').forEach(el => el.textContent = h0);
+  document.querySelector('.s-sqrt').textContent = Math.sqrt(disc).toFixed(2);
+  document.querySelectorAll('.s-ground').forEach(el => el.textContent = groundT.toFixed(2));
+  document.querySelectorAll('.s-vert').forEach(el => el.textContent = vertT.toFixed(2));
+  document.querySelectorAll('.s-maxh').forEach(el => el.textContent = maxH.toFixed(2));
+
+  // Reset simulation
+  resetSim();
+  drawGraph();
+}
+
+// ── Scene layout helpers ───────────────────────────────────────────────────
+function sceneScale(v0, h0) {
+  const groundT = timeToGround(v0, h0);
+  const maxH    = maxHeight(v0, h0);
+  // leave some padding above max height
+  const maxY = Math.max(maxH * 1.15, h0 * 1.3, 5);
+  return { xMax: groundT * 1.15, yMax: maxY };
+}
+
+function positionBall(t) {
+  const { v0, h0 } = state;
+  const { xMax, yMax } = sceneScale(v0, h0);
+  const h = Math.max(0, height(t, v0, h0));
+
+  const sceneW = scene.clientWidth;
+  const sceneH = scene.clientHeight;
+  const margin = { left: 40, bottom: 40, right: 30, top: 20 };
+  const plotW = sceneW - margin.left - margin.right;
+  const plotH = sceneH - margin.bottom - margin.top;
+
+  const xPct = margin.left + (t / xMax) * plotW;
+  const yPct = (sceneH - margin.bottom) - (h / yMax) * plotH;
+
+  ball.style.left = xPct + 'px';
+  ball.style.bottom = (sceneH - yPct) + 'px';
+}
+
+function addTrailDot(t) {
+  const { v0, h0 } = state;
+  const { xMax, yMax } = sceneScale(v0, h0);
+  const h = Math.max(0, height(t, v0, h0));
+
+  const sceneW = scene.clientWidth;
+  const sceneH = scene.clientHeight;
+  const margin = { left: 40, bottom: 40, right: 30, top: 20 };
+  const plotW = sceneW - margin.left - margin.right;
+  const plotH = sceneH - margin.bottom - margin.top;
+
+  const xPct = margin.left + (t / xMax) * plotW;
+  const yPct = (sceneH - margin.bottom) - (h / yMax) * plotH;
+
+  const dot = document.createElement('div');
+  dot.className = 'trail-dot';
+  dot.style.left = xPct + 'px';
+  dot.style.bottom = (sceneH - yPct) + 'px';
+  scene.appendChild(dot);
+  // limit trail dots
+  const dots = scene.querySelectorAll('.trail-dot');
+  if (dots.length > 120) dots[0].remove();
+}
+
+// ── Animation ──────────────────────────────────────────────────────────────
+function resetSim() {
+  pause();
+  simTime = 0;
+  document.querySelectorAll('.trail-dot').forEach(d => d.remove());
+  positionBall(0);
+  document.getElementById('time-display').textContent = 't = 0.00 s';
+  document.getElementById('play-btn').textContent = 'Play';
+}
+
+function pause() {
+  isPlaying = false;
+  if (animFrame) cancelAnimationFrame(animFrame);
+  animFrame = null;
+  document.getElementById('play-btn').textContent = 'Play';
+}
+
+function play() {
+  if (isPlaying) return;
+  isPlaying = true;
+  document.getElementById('play-btn').textContent = 'Pause';
+  lastTs = performance.now();
+  animFrame = requestAnimationFrame(loop);
+}
+
+function togglePlay() {
+  if (isPlaying) pause(); else play();
+}
+
+function loop(ts) {
+  if (!isPlaying) return;
+  const dt = (ts - lastTs) / 1000;
+  lastTs = ts;
+
+  simTime += dt;
+  const groundT = timeToGround(state.v0, state.h0);
+
+  if (simTime >= groundT) {
+    simTime = groundT;
+    positionBall(simTime);
+    document.getElementById('time-display').textContent = 't = ' + simTime.toFixed(2) + ' s';
+    addTrailDot(simTime);
+    pause();
+    return;
+  }
+
+  positionBall(simTime);
+  addTrailDot(simTime);
+  document.getElementById('time-display').textContent = 't = ' + simTime.toFixed(2) + ' s';
+
+  animFrame = requestAnimationFrame(loop);
+}
+
+// ── Graph ──────────────────────────────────────────────────────────────────
+function drawGraph() {
+  const W = canvas.width  = canvas.offsetWidth  * devicePixelRatio;
+  const H = canvas.height = canvas.offsetHeight * devicePixelRatio;
+  const dpr = devicePixelRatio;
+  const { v0, h0 } = state;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const groundT = timeToGround(v0, h0);
+  const vertT   = vertexTime(v0);
+  const maxH    = maxHeight(v0, h0);
+  const maxY    = Math.max(maxH * 1.2, h0 * 1.5, 5);
+  const maxX    = groundT * 1.15;
+
+  const margin = { top: 25*dpr, right: 25*dpr, bottom: 38*dpr, left: 45*dpr };
+  const pw = W - margin.left - margin.right;
+  const ph = H - margin.top - margin.bottom;
+
+  // Grid
+  ctx.strokeStyle = '#21262d'; ctx.lineWidth = 1;
+  for (let i = 1; i <= 4; i++) {
+    const y = margin.top + (ph * i / 5);
+    ctx.beginPath(); ctx.moveTo(margin.left, y); ctx.lineTo(margin.left + pw, y); ctx.stroke();
+  }
+  for (let i = 1; i <= 5; i++) {
+    const x = margin.left + (pw * i / 6);
+    ctx.beginPath(); ctx.moveTo(x, margin.top); ctx.lineTo(x, H - margin.bottom); ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = '#6e7681'; ctx.lineWidth = 1.5*dpr;
+  ctx.beginPath(); ctx.moveTo(margin.left, margin.top); ctx.lineTo(margin.left, H - margin.bottom); ctx.lineTo(margin.left + pw, H - margin.bottom); ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = '#8b949e'; ctx.font = `${10*dpr}px monospace`;
+  ctx.fillText('h (m)', 6*dpr, margin.top + 4*dpr);
+  ctx.fillText('t (s)', margin.left + pw - 20*dpr, H - 8*dpr);
+  ctx.fillText('0', margin.left - 14*dpr, H - margin.bottom + 4*dpr);
+  ctx.fillText(maxY.toFixed(1), margin.left - 34*dpr, margin.top + 8*dpr);
+  ctx.fillText((maxX/2).toFixed(1), margin.left + pw/2 - 10*dpr, H - margin.bottom + 18*dpr);
+  ctx.fillText(maxX.toFixed(1), margin.left + pw - 16*dpr, H - margin.bottom + 18*dpr);
+
+  // Parabola
+  ctx.strokeStyle = '#58a6ff'; ctx.lineWidth = 2.5*dpr;
+  ctx.beginPath();
+  const steps = 200;
+  for (let i = 0; i <= steps; i++) {
+    const t = (i / steps) * maxX;
+    const h = height(t, v0, h0);
+    if (h < 0) continue;
+    const x = margin.left + (t / maxX) * pw;
+    const y = (H - margin.bottom) - (h / maxY) * ph;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Ground line
+  ctx.strokeStyle = '#23863666'; ctx.lineWidth = 2*dpr;
+  ctx.setLineDash([4*dpr, 3*dpr]);
+  ctx.beginPath(); ctx.moveTo(margin.left, H - margin.bottom); ctx.lineTo(margin.left + pw, H - margin.bottom); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Vertex dot + label
+  const vx = margin.left + (vertT / maxX) * pw;
+  const vy = (H - margin.bottom) - (maxH / maxY) * ph;
+  ctx.fillStyle = '#f9c74f';
+  ctx.beginPath(); ctx.arc(vx, vy, 5*dpr, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#f9c74f'; ctx.font = `${9*dpr}px monospace`;
+  ctx.fillText('vertex', vx + 7*dpr, vy - 7*dpr);
+
+  // Root dot
+  const rx = margin.left + (groundT / maxX) * pw;
+  ctx.fillStyle = '#3fb950';
+  ctx.beginPath(); ctx.arc(rx, H - margin.bottom, 5*dpr, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#3fb950'; ctx.font = `${9*dpr}px monospace`;
+  ctx.fillText('ground', rx - 20*dpr, H - margin.bottom - 10*dpr);
+
+  // Current ball position on graph if simTime > 0
+  if (simTime > 0 && simTime <= groundT) {
+    const cx = margin.left + (simTime / maxX) * pw;
+    const cy = (H - margin.bottom) - (height(simTime, v0, h0) / maxY) * ph;
+    ctx.fillStyle = '#f9c74f';
+    ctx.beginPath(); ctx.arc(cx, cy, 5*dpr, 0, Math.PI*2); ctx.fill();
+  }
+}
+
+// ── Check answers ──────────────────────────────────────────────────────────
+function checkAnswer() {
+  const { v0, h0 } = state;
+  const groundT = timeToGround(v0, h0);
+  const vertT   = vertexTime(v0);
+  const maxH    = maxHeight(v0, h0);
+
+  checkField('ans-ground', groundT, 'fb-ground', 's');
+  checkField('ans-maxh',   maxH,    'fb-maxh',   'm');
+  checkField('ans-vert',   vertT,   'fb-vert',   's');
+}
+
+function checkField(inputId, expected, feedbackId, unitType) {
+  const input = document.getElementById(inputId);
+  const fb    = document.getElementById(feedbackId);
+  const val   = parseFloat(input.value);
+  if (isNaN(val)) { fb.textContent = 'Please enter a number.'; fb.className = 'feedback wrong'; input.className = ''; return; }
+
+  const tol = 0.05; // ±0.05 tolerance
+  const unit = unitType === 's' ? 'seconds' : 'metres';
+
+  if (Math.abs(val - expected) <= tol) {
+    input.className = 'correct';
+    fb.textContent = `Correct! The answer is ${expected.toFixed(2)} ${unit}.`;
+    fb.className = 'feedback correct';
+  } else {
+    input.className = 'wrong';
+    fb.textContent = `Not quite. Try again — the correct answer is ${expected.toFixed(2)} ${unit}.`;
+    fb.className = 'feedback wrong';
+  }
+}
+
+// ── Solution toggle ────────────────────────────────────────────────────────
+document.getElementById('show-solution-btn').addEventListener('click', () => {
+  const card = document.getElementById('solution-card');
+  card.classList.toggle('open');
+  document.getElementById('show-solution-btn').textContent =
+    card.classList.contains('open') ? 'Hide Solution' : 'Show Full Solution';
+});
+
+// ── Sliders ────────────────────────────────────────────────────────────────
+v0Slider.addEventListener('input', () => { state.v0 = parseInt(v0Slider.value); update(); });
+h0Slider.addEventListener('input', () => { state.h0 = parseInt(h0Slider.value); update(); });
+
+// ── Buttons ────────────────────────────────────────────────────────────────
+document.getElementById('play-btn').addEventListener('click', togglePlay);
+document.getElementById('reset-btn').addEventListener('click', resetSim);
+document.getElementById('check-btn').addEventListener('click', checkAnswer);
+
+document.getElementById('new-params-btn').addEventListener('click', () => {
+  state.v0 = Math.floor(Math.random() * 16) + 10;  // 10–25
+  state.h0 = Math.floor(Math.random() * 11) + 1;   // 1–11
+  v0Slider.value = state.v0;
+  h0Slider.value = state.h0;
+  // clear answer fields
+  ['ans-ground', 'ans-maxh', 'ans-vert'].forEach(id => {
+    document.getElementById(id).value = '';
+    document.getElementById(id).className = '';
+    const fb = document.getElementById(id.replace('ans', 'fb'));
+    fb.textContent = ''; fb.className = 'feedback';
+  });
+  update();
+});
+
+// ── Resize ─────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => { drawGraph(); positionBall(simTime); });
+
+// ── Init ───────────────────────────────────────────────────────────────────
+update();
+</script>
+</body>
+</html>

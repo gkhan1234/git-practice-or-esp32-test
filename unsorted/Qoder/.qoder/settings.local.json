@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(qodercli --version 2>/dev/null || qoder --version 2>/dev/null)"
+    ]
+  }
+}

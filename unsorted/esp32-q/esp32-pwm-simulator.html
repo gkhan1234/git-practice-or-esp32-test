@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESP32 PWM Simulator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0d1117;
+    color: #e6edf3;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #58a6ff;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 0.82rem;
+    color: #8b949e;
+    margin-bottom: 24px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    grid-template-rows: auto auto;
+    gap: 16px;
+    max-width: 1100px;
+  }
+
+  .card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .card h2 {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8b949e;
+    margin-bottom: 16px;
+  }
+
+  /* ── Serial connect ── */
+  #serial-card {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+  }
+
+  #connect-btn {
+    background: #238636;
+    border: none;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  #connect-btn:hover { background: #2ea043; }
+  #connect-btn.connected { background: #da3633; }
+  #connect-btn.connected:hover { background: #f85149; }
+
+  #serial-status {
+    font-size: 0.82rem;
+    color: #8b949e;
+    flex: 1;
+  }
+  #serial-status .dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #6e7681;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  #serial-status.ok .dot { background: #3fb950; }
+  #serial-status.err .dot { background: #f85149; }
+
+  #serial-log {
+    font-size: 0.75rem;
+    color: #8b949e;
+    font-family: monospace;
+    max-width: 500px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── Controls ── */
+  .control-row {
+    margin-bottom: 20px;
+  }
+  .control-row:last-child { margin-bottom: 0; }
+
+  .control-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+  }
+  .control-label span:first-child { color: #c9d1d9; }
+  .control-label .val {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #58a6ff;
+    font-variant-numeric: tabular-nums;
+  }
+  .control-label .unit {
+    font-size: 0.72rem;
+    color: #8b949e;
+    margin-left: 2px;
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #30363d;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #58a6ff;
+    border: 2px solid #161b22;
+    box-shadow: 0 0 0 2px #58a6ff44;
+    cursor: pointer;
+    transition: box-shadow 0.15s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 0 4px #58a6ff44;
+  }
+
+  .range-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    color: #6e7681;
+    margin-top: 4px;
+  }
+
+  /* ── Visualisations ── */
+  #viz-card {
+    grid-row: 2;
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  #scope-canvas {
+    width: 100%;
+    height: 180px;
+    border-radius: 6px;
+    display: block;
+    background: #0d1117;
+  }
+
+  .indicators {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    align-items: stretch;
+  }
+
+  /* LED */
+  #led-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  #led-bulb {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 35%, #fffbe6, #f9c74f, #e07b00, #4a2400);
+    box-shadow: 0 0 0px #f9c74f;
+    transition: box-shadow 0.05s, filter 0.05s;
+  }
+
+  #led-label {
+    font-size: 0.78rem;
+    color: #8b949e;
+    text-align: center;
+  }
+  #led-pct {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #f9c74f;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Gauge */
+  #gauge-card {
+    flex: 1.2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  #gauge-svg { width: 160px; height: 100px; overflow: visible; }
+
+  #gauge-label {
+    font-size: 0.78rem;
+    color: #8b949e;
+    text-align: center;
+  }
+  #gauge-val {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #3fb950;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Info panel */
+  #info-card {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #21262d;
+    font-size: 0.82rem;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-row .k { color: #8b949e; }
+  .info-row .v {
+    color: #e6edf3;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    font-family: monospace;
+    font-size: 0.85rem;
+  }
+  .info-row .v.green { color: #3fb950; }
+  .info-row .v.blue  { color: #58a6ff; }
+  .info-row .v.yellow{ color: #f9c74f; }
+
+  .cmd-box {
+    margin-top: 16px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: monospace;
+    font-size: 0.78rem;
+    color: #3fb950;
+    word-break: break-all;
+    line-height: 1.6;
+  }
+  .cmd-box .comment { color: #8b949e; }
+
+  /* No serial warning */
+  #no-serial-warn {
+    display: none;
+    font-size: 0.78rem;
+    color: #f9c74f;
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+
+  /* ── Calculations section ── */
+  .calc-section {
+    max-width: 1100px;
+    margin-top: 24px;
+  }
+
+  .calc-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-bottom: 8px;
+  }
+
+  .calc-intro {
+    font-size: 0.82rem;
+    color: #8b949e;
+    margin-bottom: 20px;
+    line-height: 1.6;
+    max-width: 800px;
+  }
+  .calc-intro strong { color: #c9d1d9; }
+
+  .calc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+  }
+
+  .calc-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .calc-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .calc-sym {
+    color: #58a6ff;
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .calc-formula {
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: #c9d1d9;
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 5px;
+    padding: 6px 10px;
+    margin: 2px 0;
+  }
+
+  .calc-sub {
+    font-family: monospace;
+    font-size: 0.82rem;
+    color: #f9c74f;
+    padding-left: 4px;
+  }
+
+  .calc-result {
+    font-family: monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #3fb950;
+    padding-left: 4px;
+  }
+
+  .calc-explain {
+    font-size: 0.75rem;
+    color: #6e7681;
+    line-height: 1.5;
+    margin-top: 4px;
+    border-top: 1px solid #21262d;
+    padding-top: 6px;
+  }
+</style>
+</head>
+<body>
+
+<h1>ESP32 PWM Simulator</h1>
+<p class="subtitle">GPIO16 &nbsp;·&nbsp; ESP32-D0WD-V3 rev3.1 &nbsp;·&nbsp; MicroPython v1.28.0 &nbsp;·&nbsp; MAC 14:33:5c:38:27:ec</p>
+
+<div class="grid">
+
+  <!-- Serial bar -->
+  <div class="card" id="serial-card">
+    <button id="connect-btn">Connect to ESP32</button>
+    <div id="serial-status"><span class="dot"></span>Not connected &mdash; simulation only</div>
+    <div id="serial-log"></div>
+    <p id="no-serial-warn">&#9888; Web Serial API not supported in this browser. Use Chrome or Edge to connect to the real board.</p>
+  </div>
+
+  <!-- Controls -->
+  <div class="card">
+    <h2>PWM Controls &mdash; GPIO16</h2>
+
+    <div class="control-row">
+      <div class="control-label">
+        <span>Duty Cycle</span>
+        <span><span class="val" id="duty-val">50</span><span class="unit">%</span></span>
+      </div>
+      <input type="range" id="duty" min="0" max="100" value="50" step="1">
+      <div class="range-ticks"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+    </div>
+
+    <div class="control-row">
+      <div class="control-label">
+        <span>Frequency</span>
+        <span><span class="val" id="freq-val">1000</span><span class="unit">Hz</span></span>
+      </div>
+      <input type="range" id="freq" min="0" max="100" value="40" step="1">
+      <div class="range-ticks"><span>1Hz</span><span>100Hz</span><span>1kHz</span><span>10kHz</span><span>40kHz</span></div>
+    </div>
+
+    <div class="control-row">
+      <div class="control-label">
+        <span>Phase Offset</span>
+        <span><span class="val" id="phase-val">0</span><span class="unit">°</span></span>
+      </div>
+      <input type="range" id="phase" min="0" max="360" value="0" step="1">
+      <div class="range-ticks"><span>0°</span><span>90°</span><span>180°</span><span>270°</span><span>360°</span></div>
+    </div>
+  </div>
+
+  <!-- Info + command -->
+  <div class="card" id="info-card">
+    <h2>Signal Parameters</h2>
+    <div class="info-row"><span class="k">Pin</span><span class="v blue">GPIO16</span></div>
+    <div class="info-row"><span class="k">Frequency</span><span class="v blue" id="i-freq">1000 Hz</span></div>
+    <div class="info-row"><span class="k">Period</span><span class="v" id="i-period">1.000 ms</span></div>
+    <div class="info-row"><span class="k">Duty cycle</span><span class="v yellow" id="i-duty">50%  (512 / 1023)</span></div>
+    <div class="info-row"><span class="k">Pulse width (HIGH)</span><span class="v green" id="i-high">500.0 µs</span></div>
+    <div class="info-row"><span class="k">Pulse width (LOW)</span><span class="v" id="i-low">500.0 µs</span></div>
+    <div class="info-row"><span class="k">Phase offset</span><span class="v" id="i-phase">0°</span></div>
+    <div class="info-row"><span class="k">Resolution</span><span class="v">10-bit (0–1023)</span></div>
+
+    <div class="cmd-box" id="cmd-box">
+      <span class="comment"># MicroPython command sent to board</span><br>
+      from machine import Pin, PWM<br>
+      pwm = PWM(Pin(16), freq=1000, duty=512)<br>
+    </div>
+  </div>
+
+  <!-- Oscilloscope + LED + Gauge -->
+  <div class="card" id="viz-card">
+    <h2>Oscilloscope &mdash; <span id="scope-label">3 cycles shown</span></h2>
+    <canvas id="scope-canvas"></canvas>
+
+    <div class="indicators">
+      <div class="card" id="led-card" style="background:#0d1117; border-color:#21262d;">
+        <h2>LED Simulation</h2>
+        <div id="led-bulb"></div>
+        <div id="led-pct">50%</div>
+        <div id="led-label">Perceived brightness<br>(gamma corrected)</div>
+      </div>
+
+      <div class="card" id="gauge-card" style="background:#0d1117; border-color:#21262d;">
+        <h2>Motor Speed</h2>
+        <svg id="gauge-svg" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#238636"/>
+              <stop offset="50%"  stop-color="#f9c74f"/>
+              <stop offset="100%" stop-color="#f85149"/>
+            </linearGradient>
+          </defs>
+          <!-- Track -->
+          <path d="M 15 90 A 65 65 0 0 1 145 90" fill="none" stroke="#30363d" stroke-width="10" stroke-linecap="round"/>
+          <!-- Fill -->
+          <path id="gauge-arc" d="M 15 90 A 65 65 0 0 1 145 90" fill="none" stroke="url(#arcGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="204" stroke-dashoffset="102"/>
+          <!-- Needle -->
+          <line id="gauge-needle" x1="80" y1="90" x2="80" y2="30" stroke="#e6edf3" stroke-width="2.5" stroke-linecap="round" transform="rotate(0, 80, 90)"/>
+          <circle cx="80" cy="90" r="5" fill="#e6edf3"/>
+        </svg>
+        <div id="gauge-val">50%</div>
+        <div id="gauge-label">Output power (duty cycle)</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Calculations breakdown -->
+<div class="calc-section">
+  <h2 class="calc-title">Calculations Breakdown</h2>
+  <p class="calc-intro">Every value shown in the simulator is derived from three inputs: <strong>Frequency (f)</strong>, <strong>Duty Cycle (D%)</strong>, and the ESP32's supply voltage <strong>V<sub>cc</sub> = 3.3 V</strong>. The formulas below update live as you move the sliders.</p>
+
+  <div class="calc-grid">
+
+    <!-- Period -->
+    <div class="calc-card">
+      <div class="calc-name">Period <span class="calc-sym">T</span></div>
+      <div class="calc-formula">T = 1 / f</div>
+      <div class="calc-sub" id="c-period-sub">= 1 / 1000</div>
+      <div class="calc-result" id="c-period-res">= 1.000 ms</div>
+      <div class="calc-explain">One full cycle: the time from one rising edge to the next. Inverse of frequency.</div>
+    </div>
+
+    <!-- HIGH pulse width -->
+    <div class="calc-card">
+      <div class="calc-name">Pulse width HIGH <span class="calc-sym">t<sub>on</sub></span></div>
+      <div class="calc-formula">t<sub>on</sub> = T × (D / 100)</div>
+      <div class="calc-sub" id="c-ton-sub">= 1.000 ms × (50 / 100)</div>
+      <div class="calc-result" id="c-ton-res">= 500.0 µs</div>
+      <div class="calc-explain">How long GPIO16 is HIGH (3.3 V) in each cycle.</div>
+    </div>
+
+    <!-- LOW pulse width -->
+    <div class="calc-card">
+      <div class="calc-name">Pulse width LOW <span class="calc-sym">t<sub>off</sub></span></div>
+      <div class="calc-formula">t<sub>off</sub> = T − t<sub>on</sub></div>
+      <div class="calc-sub" id="c-toff-sub">= 1.000 ms − 500.0 µs</div>
+      <div class="calc-result" id="c-toff-res">= 500.0 µs</div>
+      <div class="calc-explain">How long GPIO16 is LOW (0 V) in each cycle.</div>
+    </div>
+
+    <!-- Average voltage -->
+    <div class="calc-card">
+      <div class="calc-name">Average voltage <span class="calc-sym">V<sub>avg</sub></span></div>
+      <div class="calc-formula">V<sub>avg</sub> = V<sub>cc</sub> × (D / 100)</div>
+      <div class="calc-sub" id="c-vavg-sub">= 3.3 V × (50 / 100)</div>
+      <div class="calc-result" id="c-vavg-res">= 1.650 V</div>
+      <div class="calc-explain">The DC equivalent seen by a low-pass load (e.g. motor, LED driver). This is what a multimeter reads in DC mode.</div>
+    </div>
+
+    <!-- RMS voltage -->
+    <div class="calc-card">
+      <div class="calc-name">RMS voltage <span class="calc-sym">V<sub>rms</sub></span></div>
+      <div class="calc-formula">V<sub>rms</sub> = V<sub>cc</sub> × √(D / 100)</div>
+      <div class="calc-sub" id="c-vrms-sub">= 3.3 × √(50 / 100)</div>
+      <div class="calc-result" id="c-vrms-res">= 2.333 V</div>
+      <div class="calc-explain">Root-mean-square voltage. Represents the heating power delivered to a resistive load.</div>
+    </div>
+
+    <!-- Duty cycle → 10-bit -->
+    <div class="calc-card">
+      <div class="calc-name">Duty → 10-bit register <span class="calc-sym">duty</span></div>
+      <div class="calc-formula">duty = round(D / 100 × 1023)</div>
+      <div class="calc-sub" id="c-duty10-sub">= round(50 / 100 × 1023)</div>
+      <div class="calc-result" id="c-duty10-res">= 512</div>
+      <div class="calc-explain">MicroPython's PWM.duty() takes a 10-bit integer (0–1023). Convert your percentage to this value before calling the API.</div>
+    </div>
+
+    <!-- Phase offset in time -->
+    <div class="calc-card">
+      <div class="calc-name">Phase → time delay <span class="calc-sym">t<sub>φ</sub></span></div>
+      <div class="calc-formula">t<sub>φ</sub> = T × (φ / 360)</div>
+      <div class="calc-sub" id="c-tphase-sub">= 1.000 ms × (0 / 360)</div>
+      <div class="calc-result" id="c-tphase-res">= 0.0 µs</div>
+      <div class="calc-explain">The visual phase offset expressed as an actual time delay. Useful when synchronising two PWM channels.</div>
+    </div>
+
+    <!-- Gamma brightness -->
+    <div class="calc-card">
+      <div class="calc-name">Perceived LED brightness <span class="calc-sym">B</span></div>
+      <div class="calc-formula">B = (D / 100) <sup>1/2.2</sup> × 100%</div>
+      <div class="calc-sub" id="c-gamma-sub">= (50 / 100)<sup>0.4545</sup> × 100</div>
+      <div class="calc-result" id="c-gamma-res">= 72.97%</div>
+      <div class="calc-explain">The human eye responds non-linearly. A 50% duty cycle looks ~73% bright, not 50%. The exponent 1/2.2 is the inverse gamma correction (γ = 2.2).</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Frequency mapping (log-ish scale) ──────────────────────────────────────
+function sliderToFreq(v) {
+  // 0→1Hz, 40→1kHz, 70→10kHz, 100→40kHz  (approximate log scale)
+  const stops = [
+    [0,   1],
+    [20,  100],
+    [40,  1000],
+    [60,  5000],
+    [80,  20000],
+    [100, 40000]
+  ];
+  for (let i = 1; i < stops.length; i++) {
+    const [x0, f0] = stops[i-1];
+    const [x1, f1] = stops[i];
+    if (v <= x1) {
+      const t = (v - x0) / (x1 - x0);
+      return Math.round(f0 + (f1 - f0) * t);
+    }
+  }
+  return 40000;
+}
+
+// ── State ──────────────────────────────────────────────────────────────────
+const state = { duty: 50, freq: 1000, phase: 0 };
+
+// ── Elements ───────────────────────────────────────────────────────────────
+const dutySlider  = document.getElementById('duty');
+const freqSlider  = document.getElementById('freq');
+const phaseSlider = document.getElementById('phase');
+const canvas      = document.getElementById('scope-canvas');
+const ctx         = canvas.getContext('2d');
+
+// ── Serial ─────────────────────────────────────────────────────────────────
+let port = null, writer = null;
+const connectBtn  = document.getElementById('connect-btn');
+const statusEl    = document.getElementById('serial-status');
+const logEl       = document.getElementById('serial-log');
+const noSerialEl  = document.getElementById('no-serial-warn');
+
+if (!('serial' in navigator)) {
+  noSerialEl.style.display = 'block';
+}
+
+connectBtn.addEventListener('click', async () => {
+  if (port) {
+    await disconnect();
+  } else {
+    await connect();
+  }
+});
+
+async function connect() {
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    const textEncoder = new TextEncoderStream();
+    textEncoder.readable.pipeTo(port.writable);
+    writer = textEncoder.writable.getWriter();
+
+    connectBtn.textContent = 'Disconnect';
+    connectBtn.classList.add('connected');
+    statusEl.className = 'ok';
+    statusEl.innerHTML = '<span class="dot"></span>Connected — GPIO16 active';
+    setLog('Initialising PWM on GPIO16...');
+
+    // Boot the PWM
+    await send('from machine import Pin, PWM\r\n');
+    await delay(300);
+    await send('pwm = PWM(Pin(16), freq=1000, duty=512)\r\n');
+    await delay(200);
+    setLog('Ready. Adjust sliders to change PWM.');
+    pushPWM();
+  } catch(e) {
+    statusEl.className = 'err';
+    statusEl.innerHTML = '<span class="dot"></span>Connection failed: ' + e.message;
+    port = null; writer = null;
+  }
+}
+
+async function disconnect() {
+  try {
+    if (writer) {
+      await send('pwm.deinit()\r\n');
+      await delay(200);
+      writer.releaseLock();
+    }
+    await port.close();
+  } catch(_) {}
+  port = null; writer = null;
+  connectBtn.textContent = 'Connect to ESP32';
+  connectBtn.classList.remove('connected');
+  statusEl.className = '';
+  statusEl.innerHTML = '<span class="dot"></span>Disconnected';
+  setLog('');
+}
+
+async function send(text) {
+  if (writer) {
+    try { await writer.write(text); } catch(_) {}
+  }
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+function setLog(t) { logEl.textContent = t; }
+
+let pushTimer = null;
+function schedulePush() {
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushPWM, 80);
+}
+
+async function pushPWM() {
+  if (!writer) return;
+  const duty10bit = Math.round(state.duty / 100 * 1023);
+  const cmd = `pwm.freq(${state.freq}); pwm.duty(${duty10bit})\r\n`;
+  await send(cmd);
+  setLog('→ ' + cmd.trim());
+}
+
+// ── Update UI ──────────────────────────────────────────────────────────────
+function update() {
+  const duty  = state.duty;
+  const freq  = state.freq;
+  const phase = state.phase;
+  const duty10 = Math.round(duty / 100 * 1023);
+  const periodUs = 1e6 / freq;
+  const highUs   = periodUs * duty / 100;
+  const lowUs    = periodUs - highUs;
+
+  // Labels
+  document.getElementById('duty-val').textContent  = duty;
+  document.getElementById('freq-val').textContent  = freq >= 1000 ? (freq/1000).toFixed(freq%1000===0?0:1)+'k' : freq;
+  document.getElementById('phase-val').textContent = phase;
+
+  // Info rows
+  document.getElementById('i-freq').textContent   = freq >= 1000 ? (freq/1000).toFixed(2)+' kHz' : freq+' Hz';
+  document.getElementById('i-period').textContent = formatTime(periodUs);
+  document.getElementById('i-duty').textContent   = `${duty}%  (${duty10} / 1023)`;
+  document.getElementById('i-high').textContent   = formatTime(highUs);
+  document.getElementById('i-low').textContent    = formatTime(lowUs);
+  document.getElementById('i-phase').textContent  = phase + '°';
+
+  // Command box
+  document.getElementById('cmd-box').innerHTML =
+    `<span class="comment"># MicroPython command sent to board</span><br>` +
+    `from machine import Pin, PWM<br>` +
+    `pwm = PWM(Pin(16), freq=${freq}, duty=${duty10})<br>` +
+    `<span class="comment"># Phase offset: ${phase}° (visual only)</span>`;
+
+  // Oscilloscope label
+  const cycles = 3;
+  document.getElementById('scope-label').textContent = cycles + ' cycles shown';
+
+  drawScope(duty / 100, phase);
+  updateLED(duty);
+  updateGauge(duty);
+  updateCalcs(duty, freq, phase, periodUs, highUs, lowUs);
+  schedulePush();
+}
+
+function updateCalcs(duty, freq, phase, periodUs, highUs, lowUs) {
+  const VCC = 3.3;
+  const D   = duty;
+  const periodFmt = formatTime(periodUs);
+  const highFmt   = formatTime(highUs);
+  const lowFmt    = formatTime(lowUs);
+  const phaseFmt  = formatTime(periodUs * phase / 360);
+
+  const vavg   = (VCC * D / 100).toFixed(3);
+  const vrms   = (VCC * Math.sqrt(D / 100)).toFixed(3);
+  const duty10 = Math.round(D / 100 * 1023);
+  const gamma  = D > 0 ? (Math.pow(D / 100, 1 / 2.2) * 100).toFixed(2) : '0.00';
+
+  const freqFmt = freq >= 1000 ? (freq / 1000).toFixed(3) + ' kHz' : freq + ' Hz';
+
+  // Period
+  document.getElementById('c-period-sub').textContent = `= 1 / ${freqFmt}`;
+  document.getElementById('c-period-res').textContent = `= ${periodFmt}`;
+
+  // t_on
+  document.getElementById('c-ton-sub').textContent = `= ${periodFmt} × (${D} / 100)`;
+  document.getElementById('c-ton-res').textContent  = `= ${highFmt}`;
+
+  // t_off
+  document.getElementById('c-toff-sub').textContent = `= ${periodFmt} − ${highFmt}`;
+  document.getElementById('c-toff-res').textContent  = `= ${lowFmt}`;
+
+  // V_avg
+  document.getElementById('c-vavg-sub').textContent = `= 3.3 V × (${D} / 100)`;
+  document.getElementById('c-vavg-res').textContent  = `= ${vavg} V`;
+
+  // V_rms
+  document.getElementById('c-vrms-sub').textContent = `= 3.3 × √(${D} / 100)`;
+  document.getElementById('c-vrms-res').textContent  = `= ${vrms} V`;
+
+  // duty 10-bit
+  document.getElementById('c-duty10-sub').textContent = `= round(${D} / 100 × 1023)`;
+  document.getElementById('c-duty10-res').textContent  = `= ${duty10}`;
+
+  // phase → time
+  document.getElementById('c-tphase-sub').textContent = `= ${periodFmt} × (${phase} / 360)`;
+  document.getElementById('c-tphase-res').textContent  = `= ${phaseFmt}`;
+
+  // gamma
+  document.getElementById('c-gamma-sub').textContent = `= (${D} / 100)^0.4545 × 100`;
+  document.getElementById('c-gamma-res').textContent  = `= ${gamma}%`;
+}
+
+function formatTime(us) {
+  if (us >= 1e6)  return (us/1e6).toFixed(3)  + ' s';
+  if (us >= 1000) return (us/1000).toFixed(3) + ' ms';
+  return us.toFixed(1) + ' µs';
+}
+
+// ── Oscilloscope ───────────────────────────────────────────────────────────
+function drawScope(dutyFrac, phaseDeg) {
+  const W = canvas.width  = canvas.offsetWidth  * window.devicePixelRatio;
+  const H = canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+  const dpr = window.devicePixelRatio;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = '#21262d';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 4; i++) {
+    const y = H * i / 4;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  for (let i = 1; i < 6; i++) {
+    const x = W * i / 6;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+
+  // Labels
+  ctx.fillStyle = '#8b949e';
+  ctx.font = `${11 * dpr}px monospace`;
+  ctx.fillText('3.3V', 6 * dpr, 18 * dpr);
+  ctx.fillText('0V',   6 * dpr, H - 6 * dpr);
+
+  const cycles    = 3;
+  const phaseOff  = (phaseDeg / 360) / cycles;  // fraction of total width
+  const margin    = { top: 20*dpr, bot: 20*dpr, left: 36*dpr, right: 10*dpr };
+  const plotW     = W - margin.left - margin.right;
+  const plotH     = H - margin.top  - margin.bot;
+  const high_y    = margin.top;
+  const low_y     = margin.top + plotH;
+
+  ctx.strokeStyle = '#58a6ff';
+  ctx.lineWidth   = 2 * dpr;
+  ctx.lineJoin    = 'round';
+  ctx.beginPath();
+
+  const steps = Math.round(plotW);
+  for (let px = 0; px <= steps; px++) {
+    const t = px / steps;  // 0..1 across total width
+    const cycleT = ((t + phaseOff) * cycles) % 1.0;
+    const isHigh = cycleT < dutyFrac;
+    const y = isHigh ? high_y : low_y;
+    const x = margin.left + px;
+
+    if (px === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      const prevT    = ((px-1) / steps + phaseOff) * cycles % 1.0;
+      const prevHigh = prevT < dutyFrac;
+      if (isHigh !== prevHigh) {
+        ctx.lineTo(x, prevHigh ? high_y : low_y);
+        ctx.lineTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+  }
+  ctx.stroke();
+
+  // Duty cycle shading
+  ctx.fillStyle = 'rgba(88,166,255,0.07)';
+  ctx.beginPath();
+  for (let px = 0; px <= steps; px++) {
+    const t = px / steps;
+    const cycleT = ((t + phaseOff) * cycles) % 1.0;
+    const isHigh = cycleT < dutyFrac;
+    const y = isHigh ? high_y : low_y;
+    const x = margin.left + px;
+    if (px === 0) ctx.moveTo(x, low_y);
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(margin.left + plotW, low_y);
+  ctx.closePath();
+  ctx.fill();
+
+  // Period annotation
+  if (cycles >= 1) {
+    const perW = plotW / cycles;
+    ctx.strokeStyle = '#f9c74f44';
+    ctx.lineWidth   = 1;
+    ctx.setLineDash([4*dpr, 4*dpr]);
+    ctx.beginPath();
+    ctx.moveTo(margin.left, H - margin.bot/2);
+    ctx.lineTo(margin.left + perW, H - margin.bot/2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#f9c74f';
+    ctx.font = `${10*dpr}px monospace`;
+    const state_freq = sliderToFreq(parseInt(freqSlider.value));
+    const pUs = 1e6 / state_freq;
+    ctx.fillText('T=' + formatTime(pUs), margin.left + 3*dpr, H - 5*dpr);
+  }
+}
+
+// ── LED simulation ─────────────────────────────────────────────────────────
+function updateLED(duty) {
+  // Gamma-correct perceived brightness (γ ≈ 2.2)
+  const linear = duty / 100;
+  const perceived = Math.pow(linear, 1/2.2);
+  const glow = Math.round(perceived * 60);
+  const bulb = document.getElementById('led-bulb');
+  bulb.style.boxShadow =
+    glow > 2
+      ? `0 0 ${glow}px ${glow*2}px rgba(249,199,79,${(perceived*0.8).toFixed(2)}), 0 0 ${glow/2}px rgba(255,240,150,${(perceived*0.5).toFixed(2)})`
+      : 'none';
+  bulb.style.filter = `brightness(${0.2 + perceived * 0.9})`;
+  document.getElementById('led-pct').textContent = duty + '%';
+}
+
+// ── Motor gauge ────────────────────────────────────────────────────────────
+function updateGauge(duty) {
+  // Arc: path length ~204 for 180° sweep
+  const arcLen  = 204;
+  const offset  = arcLen - (duty / 100 * arcLen);
+  document.getElementById('gauge-arc').setAttribute('stroke-dashoffset', offset.toFixed(1));
+
+  // Needle: -90° = 0%, +90° = 100%, centered at 0%=left, 100%=right
+  const angle = -90 + (duty / 100 * 180);
+  document.getElementById('gauge-needle').setAttribute('transform', `rotate(${angle}, 80, 90)`);
+  document.getElementById('gauge-val').textContent = duty + '%';
+}
+
+// ── Slider events ──────────────────────────────────────────────────────────
+dutySlider.addEventListener('input', () => {
+  state.duty = parseInt(dutySlider.value);
+  update();
+});
+
+freqSlider.addEventListener('input', () => {
+  state.freq = sliderToFreq(parseInt(freqSlider.value));
+  update();
+});
+
+phaseSlider.addEventListener('input', () => {
+  state.phase = parseInt(phaseSlider.value);
+  update();
+});
+
+// ── Resize ─────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => update());
+
+// ── Init ───────────────────────────────────────────────────────────────────
+update();
+</script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+# Mac system junk
+.DS_Store
+
+# Secret passwords or API keys
+**/.env
+**/secrets.py
+**/*password*
+
+# Python virtual environments, caches, and databases
+**/__pycache__/
+**/*.pyc
+**/venv/
+**/.venv/
+**/env/
+**/site-packages/
+**/node_modules/
+**/*.db
+**/*.sqlite3
+**/*.gguf
+**/*.bin
+**/*.onnx
+**/*.pt
+**/*.safetensors
+**/*.whl
+
+# Heavy media, design, and production files
+**/*.mp4
+**/*.mov
+**/*.zip
+**/*.tar.gz
+**/*.dmg
+**/*.iso
+**/*.pdf
+**/*.ai
+**/*.eps
+**/*.ps
+**/*.psd
+**/*.tiff
+**/*.tif
+**/*.stl
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/.env
+**/.env.*

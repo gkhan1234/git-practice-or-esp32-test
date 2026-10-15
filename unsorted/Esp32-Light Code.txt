@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ESP32 GPIO PORT CONTROL</title>
+  </head>
+  <body>
+    <h1>ESP32 GPIO PORT CONTROL</h1>
+    <button id="gpio-on">Turn ON GPIO Port</button>
+    <button id="gpio-off">Turn ON GPIO Port</button>
+    <script src="control.js"></script>
+  </body>
+</html>
+
+
+const gpioOnButton = document.getElementById('gpio-on');
+const gpioOffButton = document.getElementById('gpio-off');
+
+const gpioOnUrl = 'http://esp32.local/gpio.php?state=on';
+const gpioOffUrl = 'http://esp32.local/gpio.php?state=off';
+
+gpioOnButton.addEventListener('click', () => {
+  fetch(document.location.origin.replace('http', 'ws') + gpioOnUrl)
+    .then(response => console.log(`GPIO port turned on.`))
+    .catch(error => console.error(`Error turning on GPIO port: ${error}.`));
+});
+
+gpioOffButton.addEventListener('click', () => {
+  fetch(document.location.origin.replace('http', 'ws') + gpioOffUrl)
+    .then(response => console.log(`GPIO port turned off.`))
+    .catch(error => console.error(`Error turning off GPIO port: ${error}.`));
+});
+

@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESP32 Robotic Car — Motor Simulator</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: linear-gradient(135deg, #1a237e 0%, #263238 100%);
+  color: #eceff1;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+header { text-align: center; margin-bottom: 14px; }
+h1 { font-size: 1.8rem; color: #4fc3f7; text-shadow: 0 0 20px rgba(79,195,247,0.3); }
+.subtitle { font-size: 0.95rem; color: #90a4ae; margin-top: 4px; }
+
+.card {
+  background: #1e272e;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  padding: 16px;
+  border: 2px solid #37474f;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 14px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ── Intro ── */
+#intro-card {
+  grid-column: 1 / -1;
+  background: #0d47a1;
+  border-color: #1565c0;
+}
+#intro-card h2 { color: #4fc3f7; font-size: 1.1rem; margin-bottom: 6px; }
+#intro-card p { font-size: 0.92rem; color: #bbdefb; line-height: 1.5; }
+
+/* ── Wiring Diagram ── */
+#wiring-card {
+  grid-column: 1;
+  grid-row: 2;
+  min-height: 480px;
+}
+#wiring-card h2 {
+  color: #4fc3f7;
+  font-size: 1.05rem;
+  margin-bottom: 10px;
+  text-align: center;
+}
+#wiring-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── Controls ── */
+#control-card {
+  grid-column: 2;
+  grid-row: 2 / 4;
+}
+#control-card h2 {
+  color: #ce93d8;
+  font-size: 1.05rem;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.motor-control {
+  background: #263238;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.motor-control h3 {
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.motor-control h3 .speed-val {
+  background: #37474f;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 1rem;
+  min-width: 50px;
+  text-align: center;
+}
+.motor-a h3 { color: #ef5350; }
+.motor-b h3 { color: #42a5f5; }
+
+.slider-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.slider-wrap span {
+  font-size: 0.7rem;
+  color: #78909c;
+  white-space: nowrap;
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+  background: #37474f;
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 3px solid #4fc3f7;
+  background: #263238;
+  cursor: pointer;
+}
+.motor-a input[type=range]::-webkit-slider-thumb { border-color: #ef5350; }
+.motor-b input[type=range]::-webkit-slider-thumb { border-color: #42a5f5; }
+
+.preset-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 10px;
+}
+.preset-btn {
+  background: #37474f;
+  border: 2px solid #546e7a;
+  color: #eceff1;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 8px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.preset-btn:hover { background: #455a64; border-color: #4fc3f7; }
+.preset-btn.active { background: #0d47a1; border-color: #4fc3f7; }
+.preset-btn.stop { background: #b71c1c; border-color: #e53935; }
+.preset-btn.stop:hover { background: #c62828; }
+
+/* ── Car Arena ── */
+#arena-card {
+  grid-column: 1;
+  grid-row: 3;
+  padding: 10px;
+}
+#arena-card h2 {
+  color: #66bb6a;
+  font-size: 1rem;
+  margin-bottom: 8px;
+  text-align: center;
+}
+#arena {
+  width: 100%;
+  height: 260px;
+  background: #2e2e2e;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #424242;
+  background-image:
+    radial-gradient(circle, #3a3a3a 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+#car {
+  position: absolute;
+  width: 60px;
+  height: 40px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition: none;
+}
+.car-body {
+  width: 60px;
+  height: 40px;
+  background: linear-gradient(135deg, #43a047, #2e7d32);
+  border-radius: 6px 10px 10px 6px;
+  position: relative;
+  border: 2px solid #1b5e20;
+}
+.car-body::before {
+  content: '';
+  position: absolute;
+  right: -4px;
+  top: 6px;
+  width: 8px;
+  height: 10px;
+  background: #fff9c4;
+  border-radius: 0 3px 3px 0;
+  box-shadow: 0 0 6px rgba(255,249,196,0.5);
+}
+.wheel {
+  position: absolute;
+  width: 10px;
+  height: 16px;
+  background: #212121;
+  border-radius: 3px;
+  border: 1px solid #424242;
+}
+.wheel.fl { top: -4px; left: 8px; }
+.wheel.fr { bottom: -4px; left: 8px; }
+.wheel.rl { top: -4px; right: 8px; }
+.wheel.rr { bottom: -4px; right: 8px; }
+.wheel.spinning {
+  animation: spin 0.3s linear infinite;
+}
+@keyframes spin {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 8px; }
+}
+
+#arena-info {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.arena-pill {
+  background: #263238;
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  color: #90a4ae;
+}
+.arena-pill span { color: #4fc3f7; font-weight: 700; }
+
+/* ── Code Panel ── */
+#code-card {
+  grid-column: 1 / -1;
+  grid-row: 4;
+}
+#code-card h2 {
+  color: #ffb74d;
+  font-size: 1.05rem;
+  margin-bottom: 10px;
+}
+#code-display {
+  background: #0d1117;
+  border-radius: 10px;
+  padding: 14px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #c9d1d9;
+  overflow-x: auto;
+  white-space: pre;
+  border: 1px solid #30363d;
+}
+.kw { color: #ff7b72; }
+.fn { color: #d2a8ff; }
+.str { color: #a5d6ff; }
+.num { color: #79c0ff; }
+.cmt { color: #8b949e; font-style: italic; }
+.var { color: #ffa657; }
+.highlight { background: rgba(255,255,255,0.08); border-radius: 3px; padding: 0 2px; }
+
+/* ── Help ── */
+#help-card {
+  grid-column: 1 / -1;
+  grid-row: 5;
+  background: #1b2631;
+  border-color: #37474f;
+}
+#help-card h2 { color: #4fc3f7; font-size: 1.05rem; margin-bottom: 8px; }
+#help-card p, #help-card li { font-size: 0.9rem; color: #b0bec5; line-height: 1.5; }
+#help-card ul { padding-left: 18px; margin-top: 6px; }
+#help-card li { margin-bottom: 4px; }
+#help-card strong { color: #4fc3f7; }
+
+/* ── Wire legend ── */
+.wire-legend {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #90a4ae;
+}
+.legend-swatch {
+  width: 20px;
+  height: 4px;
+  border-radius: 2px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ESP32 Robotic Car Simulator</h1>
+  <p class="subtitle">Grade 3 Robotics — Motors, Circuits & Code</p>
+</header>
+
+<div class="main-grid">
+
+  <div class="card" id="intro-card">
+    <h2>How does a robotic car work?</h2>
+    <p>A <strong>microcontroller</strong> (ESP32) sends electrical signals to a <strong>motor driver</strong> (DRV8833), which powers two <strong>DC motors</strong>. By changing the speed of each motor independently, the car can go forward, backward, and turn! A <strong>buck converter</strong> steps down the battery voltage to safely power the ESP32.</p>
+  </div>
+
+  <!-- Wiring Diagram -->
+  <div class="card" id="wiring-card">
+    <h2>Circuit Diagram — How Everything Connects</h2>
+    <svg id="wiring-svg" viewBox="0 0 720 460" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#78909c"/>
+        </marker>
+      </defs>
+
+      <!-- Battery Pack -->
+      <rect x="20" y="340" width="120" height="70" rx="8" fill="#37474f" stroke="#78909c" stroke-width="2"/>
+      <text x="80" y="365" text-anchor="middle" fill="#ffb74d" font-size="11" font-weight="700">Battery Pack</text>
+      <text x="80" y="382" text-anchor="middle" fill="#90a4ae" font-size="10">4 x AA = 6V</text>
+      <text x="80" y="398" text-anchor="middle" fill="#ef5350" font-size="9" font-weight="700">+  −</text>
+
+      <!-- Buck Converter -->
+      <rect x="200" y="340" width="120" height="70" rx="8" fill="#37474f" stroke="#78909c" stroke-width="2"/>
+      <text x="260" y="362" text-anchor="middle" fill="#ffb74d" font-size="11" font-weight="700">Buck Converter</text>
+      <text x="260" y="380" text-anchor="middle" fill="#90a4ae" font-size="10">Steps 6V → 3.3V</text>
+      <text x="260" y="398" text-anchor="middle" fill="#4fc3f7" font-size="9">for ESP32</text>
+
+      <!-- ESP32 -->
+      <rect x="160" y="60" width="180" height="240" rx="10" fill="#1a237e" stroke="#4fc3f7" stroke-width="2.5"/>
+      <rect x="210" y="55" width="80" height="16" rx="4" fill="#263238" stroke="#4fc3f7" stroke-width="1"/>
+      <text x="250" y="67" text-anchor="middle" fill="#4fc3f7" font-size="8" font-weight="700">USB-C</text>
+      <text x="250" y="90" text-anchor="middle" fill="#4fc3f7" font-size="14" font-weight="700">ESP32</text>
+      <text x="250" y="106" text-anchor="middle" fill="#90a4ae" font-size="9">DevKit V1</text>
+
+      <!-- ESP32 Left Pins -->
+      <text x="170" y="130" fill="#78909c" font-size="8">3V3</text>
+      <circle cx="160" cy="127" r="3" fill="#ffb74d"/>
+      <text x="170" y="148" fill="#78909c" font-size="8">GND</text>
+      <circle cx="160" cy="145" r="3" fill="#424242"/>
+      <text x="170" y="166" fill="#78909c" font-size="8">GPIO 25</text>
+      <circle cx="160" cy="163" r="3" fill="#ef5350" id="pin-g25"/>
+      <text x="170" y="184" fill="#78909c" font-size="8">GPIO 26</text>
+      <circle cx="160" cy="181" r="3" fill="#ef5350" id="pin-g26"/>
+      <text x="170" y="202" fill="#78909c" font-size="8">GPIO 27</text>
+      <circle cx="160" cy="199" r="3" fill="#42a5f5" id="pin-g27"/>
+      <text x="170" y="220" fill="#78909c" font-size="8">GPIO 14</text>
+      <circle cx="160" cy="217" r="3" fill="#42a5f5" id="pin-g14"/>
+      <text x="170" y="238" fill="#78909c" font-size="8">GPIO 12</text>
+      <circle cx="160" cy="235" r="3" fill="#546e7a"/>
+      <text x="170" y="256" fill="#78909c" font-size="8">GPIO 13</text>
+      <circle cx="160" cy="253" r="3" fill="#546e7a"/>
+      <text x="170" y="274" fill="#78909c" font-size="8">GPIO 15</text>
+      <circle cx="160" cy="271" r="3" fill="#546e7a"/>
+
+      <!-- ESP32 Right Pins -->
+      <text x="330" y="130" fill="#78909c" font-size="8" text-anchor="end">VIN</text>
+      <circle cx="340" cy="127" r="3" fill="#ffb74d"/>
+      <text x="330" y="148" fill="#78909c" font-size="8" text-anchor="end">GND</text>
+      <circle cx="340" cy="145" r="3" fill="#424242"/>
+      <text x="330" y="166" fill="#78909c" font-size="8" text-anchor="end">GPIO 23</text>
+      <circle cx="340" cy="163" r="3" fill="#546e7a"/>
+      <text x="330" y="184" fill="#78909c" font-size="8" text-anchor="end">GPIO 22</text>
+      <circle cx="340" cy="181" r="3" fill="#546e7a"/>
+      <text x="330" y="202" fill="#78909c" font-size="8" text-anchor="end">GPIO 21</text>
+      <circle cx="340" cy="199" r="3" fill="#546e7a"/>
+      <text x="330" y="220" fill="#78909c" font-size="8" text-anchor="end">GPIO 19</text>
+      <circle cx="340" cy="217" r="3" fill="#546e7a"/>
+      <text x="330" y="238" fill="#78909c" font-size="8" text-anchor="end">GPIO 18</text>
+      <circle cx="340" cy="235" r="3" fill="#546e7a"/>
+      <text x="330" y="256" fill="#78909c" font-size="8" text-anchor="end">GPIO 5</text>
+      <circle cx="340" cy="253" r="3" fill="#546e7a"/>
+      <text x="330" y="274" fill="#78909c" font-size="8" text-anchor="end">GPIO 4</text>
+      <circle cx="340" cy="271" r="3" fill="#546e7a"/>
+
+      <!-- DRV8833 -->
+      <rect x="460" y="100" width="140" height="200" rx="10" fill="#263238" stroke="#ce93d8" stroke-width="2.5"/>
+      <text x="530" y="125" text-anchor="middle" fill="#ce93d8" font-size="13" font-weight="700">DRV8833</text>
+      <text x="530" y="140" text-anchor="middle" fill="#90a4ae" font-size="9">Motor Driver</text>
+
+      <!-- DRV8833 Left Pins (inputs from ESP32) -->
+      <text x="470" y="165" fill="#ef5350" font-size="8" font-weight="600">AIN1</text>
+      <circle cx="460" cy="162" r="3" fill="#ef5350" id="drv-ain1"/>
+      <text x="470" y="183" fill="#ef5350" font-size="8" font-weight="600">AIN2</text>
+      <circle cx="460" cy="180" r="3" fill="#ef5350" id="drv-ain2"/>
+      <text x="470" y="201" fill="#42a5f5" font-size="8" font-weight="600">BIN1</text>
+      <circle cx="460" cy="198" r="3" fill="#42a5f5" id="drv-bin1"/>
+      <text x="470" y="219" fill="#42a5f5" font-size="8" font-weight="600">BIN2</text>
+      <circle cx="460" cy="216" r="3" fill="#42a5f5" id="drv-bin2"/>
+      <text x="470" y="237" fill="#78909c" font-size="8" font-weight="600">GND</text>
+      <circle cx="460" cy="234" r="3" fill="#424242"/>
+      <text x="470" y="255" fill="#78909c" font-size="8" font-weight="600">STBY</text>
+      <circle cx="460" cy="252" r="3" fill="#66bb6a"/>
+
+      <!-- DRV8833 Right Pins (outputs to motors) -->
+      <text x="590" y="165" fill="#66bb6a" font-size="8" font-weight="600" text-anchor="end">VMOT</text>
+      <circle cx="600" cy="162" r="3" fill="#ffb74d"/>
+      <text x="590" y="183" fill="#66bb6a" font-size="8" font-weight="600" text-anchor="end">AO1</text>
+      <circle cx="600" cy="180" r="3" fill="#66bb6a" id="drv-ao1"/>
+      <text x="590" y="201" fill="#66bb6a" font-size="8" font-weight="600" text-anchor="end">AO2</text>
+      <circle cx="600" cy="198" r="3" fill="#66bb6a" id="drv-ao2"/>
+      <text x="590" y="219" fill="#66bb6a" font-size="8" font-weight="600" text-anchor="end">BO1</text>
+      <circle cx="600" cy="216" r="3" fill="#66bb6a" id="drv-bo1"/>
+      <text x="590" y="237" fill="#66bb6a" font-size="8" font-weight="600" text-anchor="end">BO2</text>
+      <circle cx="600" cy="234" r="3" fill="#66bb6a" id="drv-bo2"/>
+      <text x="590" y="255" fill="#78909c" font-size="8" font-weight="600" text-anchor="end">GND</text>
+      <circle cx="600" cy="252" r="3" fill="#424242"/>
+
+      <!-- Motor A (Left) -->
+      <circle cx="660" cy="120" r="32" fill="#37474f" stroke="#ef5350" stroke-width="2.5"/>
+      <text x="660" y="115" text-anchor="middle" fill="#ef5350" font-size="10" font-weight="700">Motor A</text>
+      <text x="660" y="130" text-anchor="middle" fill="#90a4ae" font-size="8">Left</text>
+      <circle cx="660" cy="120" r="12" fill="none" stroke="#546e7a" stroke-width="1.5" id="motor-a-indicator"/>
+
+      <!-- Motor B (Right) -->
+      <circle cx="660" cy="240" r="32" fill="#37474f" stroke="#42a5f5" stroke-width="2.5"/>
+      <text x="660" y="235" text-anchor="middle" fill="#42a5f5" font-size="10" font-weight="700">Motor B</text>
+      <text x="660" y="250" text-anchor="middle" fill="#90a4ae" font-size="8">Right</text>
+      <circle cx="660" cy="240" r="12" fill="none" stroke="#546e7a" stroke-width="1.5" id="motor-b-indicator"/>
+
+      <!-- ── WIRES ── -->
+
+      <!-- Battery → Buck Converter (power in) -->
+      <path d="M 140 365 L 200 365" stroke="#ef5350" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M 140 385 L 200 385" stroke="#424242" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <text x="170" y="358" text-anchor="middle" fill="#ef5350" font-size="7">+6V</text>
+      <text x="170" y="400" text-anchor="middle" fill="#78909c" font-size="7">GND</text>
+
+      <!-- Buck Converter → ESP32 (3.3V power) -->
+      <path d="M 280 340 L 280 320 L 130 320 L 130 127 L 160 127" stroke="#ffb74d" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-dasharray="6,3" id="wire-3v3"/>
+      <text x="120" y="230" fill="#ffb74d" font-size="7" text-anchor="end">3.3V</text>
+
+      <!-- Buck Converter → DRV8833 VMOT (motor power) -->
+      <path d="M 320 355 L 380 355 L 380 162 L 600 162" stroke="#ff9800" stroke-width="2.5" fill="none" stroke-linecap="round" id="wire-vmot"/>
+      <text x="380" y="260" fill="#ff9800" font-size="7">Motor 6V</text>
+
+      <!-- ESP32 GPIO 25 → DRV8833 AIN1 -->
+      <path d="M 160 163 L 100 163 L 100 330 L 420 330 L 420 162 L 460 162" stroke="#ef5350" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7" class="wire-signal wire-a" id="wire-ain1"/>
+
+      <!-- ESP32 GPIO 26 → DRV8833 AIN2 -->
+      <path d="M 160 181 L 110 181 L 110 340 L 430 340 L 430 180 L 460 180" stroke="#ef5350" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7" class="wire-signal wire-a" id="wire-ain2"/>
+
+      <!-- ESP32 GPIO 27 → DRV8833 BIN1 -->
+      <path d="M 160 199 L 120 199 L 120 350 L 440 350 L 440 198 L 460 198" stroke="#42a5f5" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7" class="wire-signal wire-b" id="wire-bin1"/>
+
+      <!-- ESP32 GPIO 14 → DRV8833 BIN2 -->
+      <path d="M 160 217 L 90 217 L 90 360 L 450 360 L 450 216 L 460 216" stroke="#42a5f5" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7" class="wire-signal wire-b" id="wire-bin2"/>
+
+      <!-- ESP32 GND → DRV8833 GND -->
+      <path d="M 160 145 L 80 145 L 80 370 L 440 370 L 440 234 L 460 234" stroke="#616161" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-dasharray="4,2"/>
+      <text x="80" y="290" fill="#616161" font-size="7">GND</text>
+
+      <!-- DRV8833 AO1,AO2 → Motor A -->
+      <path d="M 600 180 L 630 180 L 630 130 L 660 130" stroke="#66bb6a" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7" class="wire-motor wire-a"/>
+      <path d="M 600 198 L 640 198 L 640 110 L 660 110" stroke="#66bb6a" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7" class="wire-motor wire-a"/>
+
+      <!-- DRV8833 BO1,BO2 → Motor B -->
+      <path d="M 600 216 L 630 216 L 630 250 L 660 250" stroke="#66bb6a" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7" class="wire-motor wire-b"/>
+      <path d="M 600 234 L 640 234 L 640 230 L 660 230" stroke="#66bb6a" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7" class="wire-motor wire-b"/>
+
+      <!-- Signal flow labels -->
+      <text x="250" y="315" text-anchor="middle" fill="#78909c" font-size="8">Signal wires (PWM)</text>
+
+      <!-- Animated signal dots -->
+      <circle r="3" fill="#ef5350" opacity="0" id="dot-a">
+        <animateMotion dur="1.5s" repeatCount="indefinite" path="M 160 163 L 100 163 L 100 330 L 420 330 L 420 162 L 460 162" begin="indefinite" id="dot-a-anim"/>
+      </circle>
+      <circle r="3" fill="#42a5f5" opacity="0" id="dot-b">
+        <animateMotion dur="1.5s" repeatCount="indefinite" path="M 160 199 L 120 199 L 120 350 L 440 350 L 440 198 L 460 198" begin="indefinite" id="dot-b-anim"/>
+      </circle>
+    </svg>
+
+    <div class="wire-legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:#ef5350"></div> Motor A signal</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#42a5f5"></div> Motor B signal</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#66bb6a"></div> Motor power</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#ffb74d"></div> 3.3V power</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#ff9800"></div> Motor 6V power</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#616161"></div> Ground (GND)</div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="card" id="control-card">
+    <h2>Motor Controls</h2>
+
+    <div class="motor-control motor-a">
+      <h3>Motor A (Left) <span class="speed-val" id="speed-a-val">0%</span></h3>
+      <div class="slider-wrap">
+        <span>Reverse</span>
+        <input type="range" id="speed-a" min="-100" max="100" value="0" step="5">
+        <span>Forward</span>
+      </div>
+    </div>
+
+    <div class="motor-control motor-b">
+      <h3>Motor B (Right) <span class="speed-val" id="speed-b-val">0%</span></h3>
+      <div class="slider-wrap">
+        <span>Reverse</span>
+        <input type="range" id="speed-b" min="-100" max="100" value="0" step="5">
+        <span>Forward</span>
+      </div>
+    </div>
+
+    <div class="preset-btns">
+      <button class="preset-btn" id="btn-forward">Forward</button>
+      <button class="preset-btn" id="btn-backward">Backward</button>
+      <button class="preset-btn" id="btn-left">Turn Left</button>
+      <button class="preset-btn" id="btn-right">Turn Right</button>
+      <button class="preset-btn" id="btn-spin">Spin</button>
+      <button class="preset-btn stop" id="btn-stop">STOP</button>
+    </div>
+  </div>
+
+  <!-- Car Arena -->
+  <div class="card" id="arena-card">
+    <h2>Car View — Top Down</h2>
+    <div id="arena">
+      <div id="car">
+        <div class="car-body">
+          <div class="wheel fl"></div>
+          <div class="wheel fr"></div>
+          <div class="wheel rl"></div>
+          <div class="wheel rr"></div>
+        </div>
+      </div>
+    </div>
+    <div id="arena-info">
+      <div class="arena-pill">Heading: <span id="heading-val">0°</span></div>
+      <div class="arena-pill">Position: <span id="pos-val">center</span></div>
+      <div class="arena-pill">Motion: <span id="motion-val">stopped</span></div>
+    </div>
+  </div>
+
+  <!-- MicroPython Code -->
+  <div class="card" id="code-card">
+    <h2>MicroPython Code (live)</h2>
+    <div id="code-display"></div>
+  </div>
+
+  <!-- Help -->
+  <div class="card" id="help-card">
+    <h2>For Teachers & Students</h2>
+    <p>This simulator shows how an ESP32 microcontroller drives two DC motors through a DRV8833 motor driver. Key ideas:</p>
+    <ul>
+      <li><strong>ESP32 GPIO pins</strong> send PWM (pulse-width modulation) signals to the DRV8833 control pins. PWM lets us vary motor speed, not just on/off.</li>
+      <li><strong>DRV8833</strong> is a motor driver — the ESP32 can't power motors directly. Each motor needs 2 pins: one for direction (forward/reverse) and one for speed (PWM).</li>
+      <li><strong>Differential steering:</strong> To turn left, slow down the left motor or run it in reverse while the right motor goes forward. Try the sliders!</li>
+      <li><strong>Buck converter:</strong> Batteries give 6V but the ESP32 needs 3.3V. The buck converter safely steps down the voltage.</li>
+      <li><strong>TT motors:</strong> These are cheap, simple DC motors. Reverse the wires (or the signals) to make them spin the other way.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+const state = { speedA: 0, speedB: 0, x: 0, y: 0, heading: 0 };
+
+const sliderA = document.getElementById('speed-a');
+const sliderB = document.getElementById('speed-b');
+const car = document.getElementById('car');
+const arena = document.getElementById('arena');
+
+function update() {
+  state.speedA = parseInt(sliderA.value);
+  state.speedB = parseInt(sliderB.value);
+
+  document.getElementById('speed-a-val').textContent = state.speedA + '%';
+  document.getElementById('speed-b-val').textContent = state.speedB + '%';
+
+  updateWires();
+  updateCode();
+  updateMotionLabel();
+}
+
+function updateWires() {
+  const absA = Math.abs(state.speedA);
+  const absB = Math.abs(state.speedB);
+
+  document.querySelectorAll('.wire-a').forEach(w => {
+    w.style.opacity = absA > 0 ? Math.max(0.3, absA / 100) : 0.15;
+    w.style.strokeWidth = absA > 0 ? (1.5 + absA / 50) : 1.5;
+  });
+  document.querySelectorAll('.wire-b').forEach(w => {
+    w.style.opacity = absB > 0 ? Math.max(0.3, absB / 100) : 0.15;
+    w.style.strokeWidth = absB > 0 ? (1.5 + absB / 50) : 1.5;
+  });
+
+  const dotA = document.getElementById('dot-a');
+  const dotAAnim = document.getElementById('dot-a-anim');
+  const dotB = document.getElementById('dot-b');
+  const dotBAnim = document.getElementById('dot-b-anim');
+
+  if (absA > 0) {
+    dotA.style.opacity = 1;
+    dotAAnim.setAttribute('dur', Math.max(0.3, 2 - absA / 60) + 's');
+    try { dotAAnim.beginElement(); } catch(e) {}
+  } else {
+    dotA.style.opacity = 0;
+  }
+
+  if (absB > 0) {
+    dotB.style.opacity = 1;
+    dotBAnim.setAttribute('dur', Math.max(0.3, 2 - absB / 60) + 's');
+    try { dotBAnim.beginElement(); } catch(e) {}
+  } else {
+    dotB.style.opacity = 0;
+  }
+
+  const motorAInd = document.getElementById('motor-a-indicator');
+  const motorBInd = document.getElementById('motor-b-indicator');
+  motorAInd.style.stroke = absA > 0 ? '#ef5350' : '#546e7a';
+  motorAInd.style.strokeWidth = absA > 0 ? 2.5 : 1.5;
+  motorBInd.style.stroke = absB > 0 ? '#42a5f5' : '#546e7a';
+  motorBInd.style.strokeWidth = absB > 0 ? 2.5 : 1.5;
+}
+
+function updateCode() {
+  const a = state.speedA;
+  const b = state.speedB;
+  const aDir = a >= 0 ? 'forward' : 'reverse';
+  const bDir = b >= 0 ? 'forward' : 'reverse';
+  const aPWM = Math.abs(a);
+  const bPWM = Math.abs(b);
+  const aDuty = Math.round(aPWM / 100 * 1023);
+  const bDuty = Math.round(bPWM / 100 * 1023);
+
+  const aForwardPin = a >= 0 ? '25' : '26';
+  const aReversePin = a >= 0 ? '26' : '25';
+  const bForwardPin = b >= 0 ? '27' : '14';
+  const bReversePin = b >= 0 ? '14' : '27';
+
+  const code =
+`<span class="cmt"># MicroPython — ESP32 Robotic Car</span>
+<span class="cmt"># Motor A (Left)  → DRV8833 AIN1 (GPIO 25), AIN2 (GPIO 26)</span>
+<span class="cmt"># Motor B (Right) → DRV8833 BIN1 (GPIO 27), BIN2 (GPIO 14)</span>
+
+<span class="kw">from</span> machine <span class="kw">import</span> Pin, PWM
+
+<span class="cmt"># Set up motor pins</span>
+<span class="var">ain1</span> = PWM(Pin(<span class="num">25</span>), freq=<span class="num">1000</span>)
+<span class="var">ain2</span> = PWM(Pin(<span class="num">26</span>), freq=<span class="num">1000</span>)
+<span class="var">bin1</span> = PWM(Pin(<span class="num">27</span>), freq=<span class="num">1000</span>)
+<span class="var">bin2</span> = PWM(Pin(<span class="num">14</span>), freq=<span class="num">1000</span>)
+
+<span class="cmt"># ── Motor A (Left) — speed: <span class="highlight">${a}%</span> ──</span>
+<span class="kw">if</span> <span class="var">speed_a</span> >= <span class="num">0</span>:        <span class="cmt"># ${aDir}</span>
+    <span class="var">ain1</span>.duty(<span class="highlight"><span class="num">${aDuty}</span></span>)  <span class="cmt"># GPIO 25 → AIN1</span>
+    <span class="var">ain2</span>.duty(<span class="num">0</span>)        <span class="cmt"># GPIO 26 → AIN2</span>
+<span class="kw">else</span>:                   <span class="cmt"># reverse</span>
+    <span class="var">ain1</span>.duty(<span class="num">0</span>)
+    <span class="var">ain2</span>.duty(<span class="highlight"><span class="num">${aDuty}</span></span>)
+
+<span class="cmt"># ── Motor B (Right) — speed: <span class="highlight">${b}%</span> ──</span>
+<span class="kw">if</span> <span class="var">speed_b</span> >= <span class="num">0</span>:        <span class="cmt"># ${bDir}</span>
+    <span class="var">bin1</span>.duty(<span class="highlight"><span class="num">${bDuty}</span></span>)  <span class="cmt"># GPIO 27 → BIN1</span>
+    <span class="var">bin2</span>.duty(<span class="num">0</span>)        <span class="cmt"># GPIO 14 → BIN2</span>
+<span class="kw">else</span>:                   <span class="cmt"># reverse</span>
+    <span class="var">bin1</span>.duty(<span class="num">0</span>)
+    <span class="var">bin2</span>.duty(<span class="highlight"><span class="num">${bDuty}</span></span>)`;
+
+  document.getElementById('code-display').innerHTML = code;
+}
+
+function updateMotionLabel() {
+  const a = state.speedA;
+  const b = state.speedB;
+  let motion = 'stopped';
+  if (a === 0 && b === 0) motion = 'stopped';
+  else if (a === b) motion = a > 0 ? 'forward' : 'backward';
+  else if (a > 0 && b < 0) motion = 'spinning right';
+  else if (a < 0 && b > 0) motion = 'spinning left';
+  else if (a > b) motion = 'turning right';
+  else if (b > a) motion = 'turning left';
+  document.getElementById('motion-val').textContent = motion;
+}
+
+// ── Car physics simulation ──
+let animFrame;
+const ARENA_W = () => arena.clientWidth;
+const ARENA_H = () => arena.clientHeight;
+
+function simulateCar() {
+  const a = state.speedA / 100;
+  const b = state.speedB / 100;
+
+  const linear = (a + b) / 2;
+  const angular = (b - a) * 2.5;
+
+  state.heading += angular * 0.03;
+  const rad = state.heading * Math.PI / 180;
+  state.x += Math.cos(rad) * linear * 2;
+  state.y -= Math.sin(rad) * linear * 2;
+
+  const aw = ARENA_W();
+  const ah = ARENA_H();
+  const margin = 40;
+
+  if (state.x < -aw / 2 + margin) state.x = -aw / 2 + margin;
+  if (state.x > aw / 2 - margin) state.x = aw / 2 - margin;
+  if (state.y < -ah / 2 + margin) state.y = -ah / 2 + margin;
+  if (state.y > ah / 2 - margin) state.y = ah / 2 - margin;
+
+  car.style.left = (aw / 2 + state.x) + 'px';
+  car.style.top = (ah / 2 + state.y) + 'px';
+  car.style.transform = `translate(-50%, -50%) rotate(${-state.heading + 90}deg)`;
+
+  document.getElementById('heading-val').textContent = Math.round(state.heading % 360) + '°';
+  document.getElementById('pos-val').textContent =
+    Math.round(state.x) + ', ' + Math.round(state.y);
+
+  animFrame = requestAnimationFrame(simulateCar);
+}
+
+// ── Presets ──
+function setPreset(a, b) {
+  sliderA.value = a;
+  sliderB.value = b;
+  update();
+}
+
+document.getElementById('btn-forward').addEventListener('click', () => setPreset(70, 70));
+document.getElementById('btn-backward').addEventListener('click', () => setPreset(-70, -70));
+document.getElementById('btn-left').addEventListener('click', () => setPreset(30, 70));
+document.getElementById('btn-right').addEventListener('click', () => setPreset(70, 30));
+document.getElementById('btn-spin').addEventListener('click', () => setPreset(-60, 60));
+document.getElementById('btn-stop').addEventListener('click', () => setPreset(0, 0));
+
+// ── Slider events ──
+sliderA.addEventListener('input', update);
+sliderB.addEventListener('input', update);
+
+// ── Init ──
+update();
+simulateCar();
+</script>
+</body>
+</html>

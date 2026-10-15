@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grade 3 Math — Multiplication Garden</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: linear-gradient(135deg, #e0f7fa 0%, #fff8e1 100%);
+  color: #263238;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', system-ui, sans-serif;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+h1 {
+  font-size: 2rem;
+  color: #2e7d32;
+  text-shadow: 2px 2px 0 #fff;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #607d8b;
+  margin-top: 4px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.08);
+  padding: 18px;
+  border: 3px solid #ffffff;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* ── Question / intro ── */
+#intro-card {
+  grid-column: 1 / -1;
+  background: #fff3e0;
+  border-color: #ffcc80;
+}
+#intro-card h2 {
+  color: #ef6c00;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+#intro-card p {
+  font-size: 0.98rem;
+  color: #5d4037;
+  line-height: 1.6;
+}
+
+.garden-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.col-labels {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.col-label {
+  width: 40px;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #558b2f;
+}
+
+.row-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-right: 6px;
+  justify-content: center;
+}
+.row-label {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #558b2f;
+}
+
+.garden-flex {
+  display: flex;
+  align-items: center;
+}
+
+/* ── Garden scene ── */
+#scene-card {
+  grid-column: 1;
+  grid-row: 2;
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+#scene-card h2 {
+  color: #2e7d32;
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+#garden {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 14px;
+  background: #dcedc8;
+  border-radius: 16px;
+  border: 4px dashed #aed581;
+  min-width: 260px;
+  min-height: 260px;
+  justify-content: center;
+  align-content: center;
+}
+
+.plant {
+  width: 40px; height: 40px;
+  font-size: 1.8rem;
+  display: flex; align-items: center; justify-content: center;
+  background: #f1f8e9;
+  border-radius: 50%;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.1);
+  user-select: none;
+  transition: transform 0.15s;
+  animation: pop 0.3s ease-out;
+}
+@keyframes pop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.row-label, .col-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #558b2f;
+  text-align: center;
+}
+
+#garden-info {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 10px;
+}
+.info-pill {
+  background: #e8f5e9;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+/* ── Controls ── */
+#control-card {
+  grid-column: 2;
+  grid-row: 2 / 4;
+}
+#control-card h2 {
+  color: #6a1b9a;
+  font-size: 1.1rem;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.control-row {
+  margin-bottom: 22px;
+  background: #f3e5f5;
+  border-radius: 12px;
+  padding: 14px;
+}
+.control-row:last-child { margin-bottom: 0; }
+
+.control-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #4a148c;
+}
+.control-label .val {
+  background: #ffffff;
+  color: #6a1b9a;
+  font-size: 1.3rem;
+  width: 42px; height: 42px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.1);
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 14px;
+  border-radius: 8px;
+  background: #ce93d8;
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 4px solid #8e24aa;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.15);
+  cursor: pointer;
+}
+
+.emoji-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.4rem;
+  margin-top: 6px;
+}
+
+.tip {
+  font-size: 0.85rem;
+  color: #6a1b9a;
+  background: #f3e5f5;
+  border-radius: 10px;
+  padding: 10px;
+  line-height: 1.5;
+  margin-top: 14px;
+}
+.tip strong { color: #4a148c; }
+
+/* ── Equation strip ── */
+#equation-card {
+  grid-column: 1;
+  grid-row: 3;
+  text-align: center;
+  background: #e3f2fd;
+  border-color: #90caf9;
+}
+#equation-card h2 {
+  color: #1565c0;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+#equation {
+  font-size: 1.7rem;
+  color: #0d47a1;
+  font-weight: 700;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.eq-box {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 6px 14px;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.08);
+}
+#repeated-add {
+  font-size: 1.1rem;
+  color: #0277bd;
+  margin-bottom: 10px;
+}
+#total-plants {
+  font-size: 2.2rem;
+  color: #2e7d32;
+  font-weight: 800;
+}
+
+/* ── Quiz area ── */
+#quiz-card {
+  grid-column: 1 / -1;
+  grid-row: 4;
+  background: #fffde7;
+  border-color: #fff176;
+}
+#quiz-card h2 {
+  color: #f57f17;
+  font-size: 1.1rem;
+  margin-bottom: 14px;
+}
+
+.quiz-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.quiz-question {
+  font-size: 1.2rem;
+  color: #5d4037;
+  font-weight: 700;
+}
+.quiz-question .blank {
+  display: inline-block;
+  width: 70px;
+  border-bottom: 3px solid #fbc02d;
+  text-align: center;
+  color: #f57f17;
+}
+.quiz-question input {
+  width: 70px;
+  font-size: 1.2rem;
+  text-align: center;
+  border: 3px solid #fbc02d;
+  border-radius: 8px;
+  padding: 4px;
+  outline: none;
+  color: #f57f17;
+  font-weight: 700;
+}
+
+button {
+  background: #43a047;
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #2e7d32;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+button:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 #2e7d32;
+}
+button.blue {
+  background: #1e88e5;
+  box-shadow: 0 4px 0 #1565c0;
+}
+button.blue:active { box-shadow: 0 0 0 #1565c0; }
+button.orange {
+  background: #fb8c00;
+  box-shadow: 0 4px 0 #ef6c00;
+}
+button.orange:active { box-shadow: 0 0 0 #ef6c00; }
+
+.feedback {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-top: 10px;
+  min-height: 1.5em;
+}
+.feedback.correct { color: #2e7d32; }
+.feedback.wrong { color: #d84315; }
+
+/* ── Sharing / division section ── */
+#share-card {
+  grid-column: 1 / -1;
+  grid-row: 5;
+  background: #fce4ec;
+  border-color: #f48fb1;
+}
+#share-card h2 {
+  color: #c2185b;
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+}
+#share-controls {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+#share-controls label { font-weight: 700; color: #880e4f; }
+#share-controls select {
+  font-size: 1rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 2px solid #f06292;
+  outline: none;
+  background: #fff;
+  color: #880e4f;
+}
+#share-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+.group {
+  background: #fff;
+  border: 3px dashed #f06292;
+  border-radius: 12px;
+  padding: 8px;
+  min-width: 80px;
+  text-align: center;
+}
+.group-title {
+  font-size: 0.75rem;
+  color: #880e4f;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.group-plants { font-size: 1.3rem; }
+
+/* ── Help / teacher section ── */
+#help-card {
+  grid-column: 1 / -1;
+  grid-row: 6;
+  background: #f3e5f5;
+  border-color: #ce93d8;
+}
+#help-card h2 {
+  color: #6a1b9a;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+#help-card p, #help-card li {
+  font-size: 0.95rem;
+  color: #4a148c;
+  line-height: 1.6;
+}
+#help-card ul { padding-left: 20px; margin-top: 6px; }
+#help-card li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌻 Multiplication Garden 🌻</h1>
+  <p class="subtitle">Grade 3 Math — Understanding multiplication as equal groups</p>
+</header>
+
+<div class="grid">
+
+  <!-- Intro -->
+  <div class="card" id="intro-card">
+    <h2>🌱 What is multiplication?</h2>
+    <p>Multiplication is just a fast way of adding the same number again and again. If you plant <strong>3 rows</strong> of flowers and each row has <strong>4 flowers</strong>, you can add 4 + 4 + 4, or you can multiply <strong>3 × 4</strong>. Use the garden below to see how it works!</p>
+  </div>
+
+  <!-- Garden scene -->
+  <div class="card" id="scene-card">
+    <h2>🌼 Your Garden</h2>
+    <div class="garden-wrap">
+      <div class="garden-flex">
+        <div class="row-labels" id="row-labels"></div>
+        <div>
+          <div class="col-labels" id="col-labels"></div>
+          <div id="garden"></div>
+        </div>
+      </div>
+    </div>
+    <div id="garden-info">
+      <div class="info-pill">🌱 Rows: <span id="info-rows">3</span></div>
+      <div class="info-pill">🌸 Plants per row: <span id="info-cols">4</span></div>
+      <div class="info-pill">✨ Total: <span id="info-total">12</span></div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="card" id="control-card">
+    <h2>🎛️ Grow Your Garden</h2>
+
+    <div class="control-row">
+      <div class="control-label">
+        <span>Rows</span>
+        <div class="val" id="rows-val">3</div>
+      </div>
+      <input type="range" id="rows-slider" min="1" max="8" value="3" step="1">
+      <div class="emoji-row"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+    </div>
+
+    <div class="control-row">
+      <div class="control-label">
+        <span>Plants in each row</span>
+        <div class="val" id="cols-val">4</div>
+      </div>
+      <input type="range" id="cols-slider" min="1" max="8" value="4" step="1">
+      <div class="emoji-row"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+    </div>
+
+    <div class="tip">
+      <strong>Try this:</strong> Move the sliders and count the plants. Does 3 rows of 4 give the same total as 4 rows of 3? 🌻
+    </div>
+  </div>
+
+  <!-- Equation -->
+  <div class="card" id="equation-card">
+    <h2>🔢 The Math Sentence</h2>
+    <div id="equation">
+      <span class="eq-box" id="eq-rows">3</span>
+      <span>×</span>
+      <span class="eq-box" id="eq-cols">4</span>
+      <span>=</span>
+      <span class="eq-box" id="eq-total">12</span>
+    </div>
+    <div id="repeated-add">4 + 4 + 4 = 12</div>
+    <div id="total-plants">12 plants in total 🌻</div>
+  </div>
+
+  <!-- Quiz -->
+  <div class="card" id="quiz-card">
+    <h2>🎯 Quick Check</h2>
+    <div class="quiz-row">
+      <div class="quiz-question">There are <span id="q-rows">3</span> rows. Each row has <span id="q-cols">4</span> plants. How many plants are there?</div>
+      <input type="number" id="quiz-answer" min="0" max="64">
+      <button id="check-btn">Check</button>
+      <button id="new-question-btn" class="orange">New Question</button>
+    </div>
+    <div class="feedback" id="quiz-feedback"></div>
+  </div>
+
+  <!-- Sharing / division -->
+  <div class="card" id="share-card">
+    <h2>🎒 Sharing into Groups (Division)</h2>
+    <p style="font-size:0.95rem; color:#880e4f; margin-bottom:10px;">You have <strong id="share-total">12</strong> plants. Share them equally into groups.</p>
+    <div id="share-controls">
+      <label for="share-select">Share into:</label>
+      <select id="share-select">
+        <option value="1">1 group</option>
+        <option value="2">2 groups</option>
+        <option value="3" selected>3 groups</option>
+        <option value="4">4 groups</option>
+        <option value="6">6 groups</option>
+      </select>
+      <button id="share-btn" class="blue">Show Sharing</button>
+    </div>
+    <div id="share-result" style="font-size:1rem; color:#880e4f; font-weight:700; margin-bottom:10px;"></div>
+    <div id="share-groups"></div>
+  </div>
+
+  <!-- Help for teachers / parents -->
+  <div class="card" id="help-card">
+    <h2>📚 For Teachers &amp; Parents</h2>
+    <p>This simulator helps Grade 3 students understand multiplication concretely before memorising times tables. Key ideas to discuss:</p>
+    <ul>
+      <li><strong>Rows × Columns:</strong> The first number tells us how many groups (rows); the second tells us how many are in each group.</li>
+      <li><strong>Repeated addition:</strong> Multiplication is a shortcut for adding equal groups (4 + 4 + 4 = 3 × 4).</li>
+      <li><strong>Commutative property:</strong> 3 × 4 gives the same answer as 4 × 3 — the rectangle just turns sideways.</li>
+      <li><strong>Connection to division:</strong> Sharing 12 plants into 3 equal groups is 12 ÷ 3 = 4.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const state = { rows: 3, cols: 4 };
+const PLANTS = ['🌻','🌷','🌼','🌹','🌺','🌸','🌵','🌱'];
+
+// ── DOM ────────────────────────────────────────────────────────────────────
+const rowsSlider = document.getElementById('rows-slider');
+const colsSlider = document.getElementById('cols-slider');
+const garden     = document.getElementById('garden');
+
+function update() {
+  const { rows, cols } = state;
+  const total = rows * cols;
+
+  // Update labels
+  document.getElementById('rows-val').textContent = rows;
+  document.getElementById('cols-val').textContent = cols;
+  document.getElementById('info-rows').textContent = rows;
+  document.getElementById('info-cols').textContent = cols;
+  document.getElementById('info-total').textContent = total;
+  document.getElementById('eq-rows').textContent = rows;
+  document.getElementById('eq-cols').textContent = cols;
+  document.getElementById('eq-total').textContent = total;
+  document.getElementById('total-plants').textContent = total + ' plant' + (total !== 1 ? 's' : '') + ' in total ' + (total > 0 ? '🌻' : '😢');
+
+  // Repeated addition
+  let addText = '';
+  if (cols === 0) addText = '0';
+  else if (rows === 1) addText = cols + ' = ' + total;
+  else {
+    const parts = [];
+    for (let i = 0; i < rows; i++) parts.push(cols);
+    addText = parts.join(' + ') + ' = ' + total;
+  }
+  document.getElementById('repeated-add').textContent = addText;
+
+  // Update quiz question
+  document.getElementById('q-rows').textContent = rows;
+  document.getElementById('q-cols').textContent = cols;
+  document.getElementById('share-total').textContent = total;
+
+  // Draw garden
+  drawGarden(rows, cols);
+
+  // Clear quiz feedback
+  document.getElementById('quiz-feedback').textContent = '';
+  document.getElementById('quiz-feedback').className = 'feedback';
+  document.getElementById('quiz-answer').value = '';
+  document.getElementById('quiz-answer').className = '';
+
+  // Update sharing
+  updateShareOptions(total);
+  document.getElementById('share-groups').innerHTML = '';
+  document.getElementById('share-result').textContent = '';
+}
+
+function drawGarden(rows, cols) {
+  garden.innerHTML = '';
+  garden.style.gridTemplateColumns = `repeat(${cols}, 40px)`;
+
+  const colLabels = document.getElementById('col-labels');
+  colLabels.innerHTML = '';
+  for (let c = 0; c < cols; c++) {
+    const lbl = document.createElement('div');
+    lbl.className = 'col-label';
+    lbl.textContent = c + 1;
+    colLabels.appendChild(lbl);
+  }
+
+  const rowLabels = document.getElementById('row-labels');
+  rowLabels.innerHTML = '';
+  for (let r = 0; r < rows; r++) {
+    const lbl = document.createElement('div');
+    lbl.className = 'row-label';
+    lbl.textContent = r + 1;
+    rowLabels.appendChild(lbl);
+  }
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const plant = document.createElement('div');
+      plant.className = 'plant';
+      plant.textContent = PLANTS[(r + c) % PLANTS.length];
+      plant.title = 'Row ' + (r+1) + ', Plant ' + (c+1);
+      garden.appendChild(plant);
+    }
+  }
+}
+
+function updateShareOptions(total) {
+  const sel = document.getElementById('share-select');
+  sel.innerHTML = '';
+  const options = [1, 2, 3, 4, 5, 6];
+  options.forEach(n => {
+    if (total % n === 0 || n <= total) {
+      const opt = document.createElement('option');
+      opt.value = n;
+      opt.textContent = n + ' group' + (n > 1 ? 's' : '');
+      sel.appendChild(opt);
+    }
+  });
+  // Try to keep 3 selected if possible
+  if (total % 3 === 0) sel.value = 3;
+  else sel.value = 1;
+}
+
+// ── Quiz check ─────────────────────────────────────────────────────────────
+document.getElementById('check-btn').addEventListener('click', () => {
+  const input = document.getElementById('quiz-answer');
+  const fb    = document.getElementById('quiz-feedback');
+  const guess = parseInt(input.value);
+  const total = state.rows * state.cols;
+
+  if (isNaN(guess)) {
+    fb.textContent = 'Please type a number in the box. 🌱';
+    fb.className = 'feedback wrong';
+    input.className = '';
+    return;
+  }
+
+  if (guess === total) {
+    fb.textContent = 'Correct! ' + state.rows + ' × ' + state.cols + ' = ' + total + '. Great job! 🌟';
+    fb.className = 'feedback correct';
+    input.className = 'correct';
+  } else {
+    fb.textContent = 'Not quite. Try counting the plants in the garden. The answer is ' + total + '.';
+    fb.className = 'feedback wrong';
+    input.className = 'wrong';
+  }
+});
+
+document.getElementById('new-question-btn').addEventListener('click', () => {
+  state.rows = Math.floor(Math.random() * 6) + 2; // 2–7
+  state.cols = Math.floor(Math.random() * 6) + 2; // 2–7
+  rowsSlider.value = state.rows;
+  colsSlider.value = state.cols;
+  update();
+});
+
+// ── Sharing / division ─────────────────────────────────────────────────────
+document.getElementById('share-btn').addEventListener('click', () => {
+  const total = state.rows * state.cols;
+  const groups = parseInt(document.getElementById('share-select').value);
+  const perGroup = Math.floor(total / groups);
+  const remainder = total % groups;
+
+  const container = document.getElementById('share-groups');
+  const result    = document.getElementById('share-result');
+  container.innerHTML = '';
+
+  if (remainder === 0) {
+    result.textContent = total + ' ÷ ' + groups + ' = ' + perGroup + ' plants in each group.';
+  } else {
+    result.textContent = total + ' cannot be shared equally into ' + groups + ' groups. There would be ' + remainder + ' left over.';
+  }
+
+  for (let g = 1; g <= groups; g++) {
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'group';
+    groupDiv.innerHTML = `<div class="group-title">Group ${g}</div><div class="group-plants">${'🌻'.repeat(perGroup)}</div>`;
+    container.appendChild(groupDiv);
+  }
+
+  if (remainder > 0) {
+    const leftover = document.createElement('div');
+    leftover.className = 'group';
+    leftover.style.borderColor = '#fbc02d';
+    leftover.innerHTML = `<div class="group-title">Left over</div><div class="group-plants">${'🌻'.repeat(remainder)}</div>`;
+    container.appendChild(leftover);
+  }
+});
+
+// ── Sliders ────────────────────────────────────────────────────────────────
+rowsSlider.addEventListener('input', () => { state.rows = parseInt(rowsSlider.value); update(); });
+colsSlider.addEventListener('input', () => { state.cols = parseInt(colsSlider.value); update(); });
+
+// ── Init ───────────────────────────────────────────────────────────────────
+update();
+</script>
+</body>
+</html>

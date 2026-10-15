@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>MicroLab — Learn Electronics</title>
+<meta name="description" content="MicroLab is an interactive, offline-friendly electronics lab for learning components like resistors and capacitors, with hands-on tools and lessons.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230f3d2e'/%3E%3Crect x='30' y='30' width='40' height='40' rx='4' fill='none' stroke='%23d4a24c' stroke-width='6'/%3E%3Cline x1='50' y1='8' x2='50' y2='30' stroke='%23d4a24c' stroke-width='6'/%3E%3Cline x1='50' y1='70' x2='50' y2='92' stroke='%23d4a24c' stroke-width='6'/%3E%3Cline x1='8' y1='50' x2='30' y2='50' stroke='%23d4a24c' stroke-width='6'/%3E%3Cline x1='70' y1='50' x2='92' y2='50' stroke='%23d4a24c' stroke-width='6'/%3E%3C/svg%3E">
+<style>
+/* ============================= DESIGN TOKENS ============================= */
+:root{
+  --pcb-900:#0a2a1f;
+  --pcb-800:#0f3d2e;
+  --pcb-700:#155036;
+  --pcb-600:#1c6446;
+  --copper-700:#9a5a26;
+  --copper-600:#b3652f;
+  --copper-500:#c9793f;
+  --copper-100:#f3e2d0;
+  --gold-600:#b8912b;
+  --gold-500:#d4af37;
+  --paper-50:#fbf9f2;
+  --paper-100:#f7f4ea;
+  --paper-200:#efe9d6;
+  --paper-300:#e3dabd;
+  --line-300:#d8cfae;
+  --line-400:#c3b78f;
+  --ink-900:#1c1f1d;
+  --ink-700:#41453f;
+  --ink-500:#6b6f66;
+  --success-700:#276240;
+  --success-600:#2e7d4f;
+  --success-100:#e3f3e8;
+  --danger-700:#9c3123;
+  --danger-600:#c0392b;
+  --danger-100:#fbe8e5;
+  --white:#ffffff;
+  --radius-sm:6px;
+  --radius-md:10px;
+  --radius-lg:18px;
+  --radius-pill:999px;
+  --shadow-sm:0 1px 3px rgba(15,20,15,.14);
+  --shadow-md:0 6px 20px rgba(15,20,15,.16);
+  --shadow-lg:0 12px 34px rgba(15,20,15,.22);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+  --sidebar-w: 268px;
+  --header-h: 64px;
+}
+
+/* ============================= RESET ============================= */
+*,*::before,*::after{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  margin:0;
+  font-family:var(--font-sans);
+  color:var(--ink-900);
+  background:
+    radial-gradient(circle at 1px 1px, rgba(15,61,46,.07) 1px, transparent 1.6px) 0 0/22px 22px,
+    var(--paper-100);
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{ line-height:1.2; margin:0 0 .5em; color:var(--pcb-800); }
+h1{ font-size:1.9rem; }
+h2{ font-size:1.4rem; }
+h3{ font-size:1.12rem; }
+p{ margin:0 0 1em; }
+a{ color:var(--copper-700); }
+a:hover{ color:var(--copper-600); }
+button{ font-family:inherit; }
+img,svg{ max-width:100%; display:block; }
+code, .mono{ font-family:var(--font-mono); }
+ul{ margin:0; padding:0; list-style:none; }
+:focus-visible{ outline:3px solid var(--copper-600); outline-offset:2px; border-radius:4px; }
+
+.sr-only{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+}
+.skip-link{
+  position:absolute; left:8px; top:-60px;
+  background:var(--pcb-800); color:var(--white);
+  padding:10px 16px; border-radius:var(--radius-sm);
+  z-index:200; transition:top .15s ease;
+  font-weight:600; text-decoration:none;
+}
+.skip-link:focus{ top:8px; }
+
+/* ============================= LAYOUT SHELL ============================= */
+.app-shell{ min-height:100vh; display:flex; flex-direction:column; }
+
+.site-header{
+  height:var(--header-h);
+  background:linear-gradient(180deg, var(--pcb-800), var(--pcb-900));
+  color:var(--paper-50);
+  display:flex; align-items:center; gap:14px;
+  padding:0 16px;
+  position:sticky; top:0; z-index:100;
+  border-bottom:3px solid var(--gold-500);
+  box-shadow:var(--shadow-md);
+}
+.nav-toggle{
+  display:none;
+  background:transparent; border:2px solid rgba(255,255,255,.35); border-radius:var(--radius-sm);
+  width:44px; height:44px; align-items:center; justify-content:center; cursor:pointer; color:var(--paper-50);
+  flex-shrink:0;
+}
+.nav-toggle svg{ width:22px; height:22px; }
+.nav-toggle:hover{ border-color:var(--gold-500); }
+
+.brand{ display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
+.brand-chip{ width:34px; height:34px; flex-shrink:0; }
+.brand-text{ display:flex; flex-direction:column; line-height:1.1; }
+.brand-name{ font-weight:800; font-size:1.15rem; letter-spacing:.02em; font-family:var(--font-mono); }
+.brand-tagline{ font-size:.72rem; color:var(--copper-100); text-transform:uppercase; letter-spacing:.08em; }
+
+.header-spacer{ flex:1; }
+.header-hint{ font-size:.8rem; color:var(--copper-100); }
+
+.app-body{ flex:1; display:block; }
+
+.nav-backdrop{
+  display:none;
+  position:fixed; inset:0; background:rgba(10,20,15,.45); z-index:150;
+}
+.nav-backdrop.show{ display:block; }
+
+.sidebar{
+  width:var(--sidebar-w);
+  background:var(--pcb-800);
+  color:var(--paper-100);
+  padding:18px 0 30px;
+  position:fixed; top:var(--header-h); left:0; bottom:0;
+  overflow-y:auto;
+  border-right:3px solid var(--gold-500);
+  z-index:110;
+}
+.nav-list{ display:flex; flex-direction:column; gap:2px; padding:0 10px; }
+.nav-section-label{
+  font-size:.72rem; text-transform:uppercase; letter-spacing:.1em;
+  color:var(--copper-100); opacity:.75;
+  margin:16px 12px 6px; font-weight:700;
+}
+.nav-list a{
+  display:flex; align-items:center; gap:10px;
+  color:var(--paper-100); text-decoration:none;
+  padding:10px 12px; border-radius:var(--radius-sm);
+  font-weight:600; font-size:.95rem;
+  min-height:44px;
+  border-left:3px solid transparent;
+}
+.nav-list a:hover{ background:rgba(255,255,255,.08); }
+.nav-list a.active{
+  background:var(--pcb-700);
+  border-left-color:var(--gold-500);
+  color:var(--white);
+}
+.nav-icon{ width:18px; height:18px; flex-shrink:0; opacity:.9; }
+.nav-sublist{ display:flex; flex-direction:column; gap:2px; padding-left:14px; border-left:2px solid var(--pcb-600); margin-left:12px; }
+.nav-badge{
+  margin-left:auto; font-family:var(--font-mono); font-size:.68rem;
+  background:rgba(255,255,255,.12); padding:2px 7px; border-radius:var(--radius-pill);
+  white-space:nowrap;
+}
+.nav-badge.done{ background:var(--gold-500); color:var(--pcb-900); font-weight:800; }
+
+.main-content{
+  min-width:0;
+  margin-left:var(--sidebar-w);
+  padding:28px 22px 60px;
+}
+.main-inner{ max-width:1080px; margin:0 auto; }
+
+.site-footer{
+  background:var(--pcb-900); color:var(--copper-100);
+  padding:22px 16px; text-align:center; font-size:.85rem;
+  border-top:3px solid var(--gold-500);
+  margin-left:var(--sidebar-w);
+}
+.site-footer strong{ color:var(--paper-50); }
+
+/* ============================= UTILITY / COMMON PATTERNS ============================= */
+.pill{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 12px; border-radius:var(--radius-pill);
+  font-size:.78rem; font-weight:700; font-family:var(--font-mono);
+  background:var(--paper-200); color:var(--ink-700);
+  border:1px solid var(--line-400);
+}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  border-radius:var(--radius-md);
+  padding:11px 20px;
+  font-weight:700; font-size:.95rem;
+  cursor:pointer; border:2px solid transparent;
+  min-height:44px;
+  transition:transform .06s ease;
+}
+.btn:active{ transform:translateY(1px); }
+.btn-primary{ background:var(--copper-600); color:var(--white); border-color:var(--copper-700); }
+.btn-primary:hover{ background:var(--copper-700); }
+.btn-secondary{ background:var(--white); color:var(--pcb-800); border-color:var(--line-400); }
+.btn-secondary:hover{ border-color:var(--copper-500); }
+.btn-ghost{ background:transparent; color:var(--pcb-800); border-color:transparent; text-decoration:underline; }
+.btn-danger-ghost{ background:transparent; color:var(--danger-700); border-color:var(--danger-100); }
+.btn-danger-ghost:hover{ background:var(--danger-100); }
+.btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+.card-row{ display:flex; flex-wrap:wrap; gap:10px; margin:18px 0; }
+
+.hero{
+  background:linear-gradient(135deg, var(--pcb-800), var(--pcb-700));
+  color:var(--paper-50);
+  border-radius:var(--radius-lg);
+  padding:34px 30px;
+  margin-bottom:26px;
+  position:relative; overflow:hidden;
+  border:1px solid var(--pcb-600);
+}
+.hero::after{
+  content:""; position:absolute; inset:0;
+  background-image: radial-gradient(circle, rgba(255,255,255,.09) 1.5px, transparent 1.5px);
+  background-size:18px 18px;
+  pointer-events:none;
+}
+.hero h1{ color:var(--white); margin-bottom:10px; }
+.hero p{ color:var(--copper-100); max-width:60ch; font-size:1.02rem; }
+.hero-actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:18px; position:relative; }
+
+.section{ margin:34px 0; }
+.section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
+
+.progress-panel{
+  background:var(--white); border:1px solid var(--line-300); border-radius:var(--radius-lg);
+  padding:20px 22px; box-shadow:var(--shadow-sm);
+}
+.progress-row{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:12px 0; border-bottom:1px dashed var(--line-300);
+}
+.progress-row:last-of-type{ border-bottom:none; }
+.progress-name{ font-weight:700; }
+.progress-status{ font-size:.85rem; color:var(--ink-500); }
+.meter{
+  width:120px; height:10px; background:var(--paper-200); border-radius:var(--radius-pill); overflow:hidden;
+  border:1px solid var(--line-400);
+}
+.meter > span{ display:block; height:100%; background:var(--success-600); }
+
+.quick-links{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin:20px 0; }
+.quick-link-card{
+  background:var(--white); border:1px solid var(--line-300); border-radius:var(--radius-lg);
+  padding:18px; text-decoration:none; color:inherit; box-shadow:var(--shadow-sm);
+  display:flex; flex-direction:column; gap:8px;
+  border-top:4px solid var(--copper-500);
+}
+.quick-link-card:hover{ box-shadow:var(--shadow-md); transform:translateY(-2px); }
+.quick-link-card h3{ margin:0; color:var(--pcb-800); }
+.quick-link-card p{ margin:0; font-size:.88rem; color:var(--ink-500); }
+
+/* ============================= COMPONENT LIBRARY GRID ============================= */
+.component-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(300px,1fr));
+  gap:18px;
+}
+.component-card{
+  background:var(--white);
+  border:1px solid var(--line-300);
+  border-radius:var(--radius-lg);
+  overflow:hidden;
+  box-shadow:var(--shadow-sm);
+}
+.component-card > summary{
+  list-style:none; cursor:pointer;
+  padding:16px 18px;
+  background:linear-gradient(180deg,var(--pcb-800),var(--pcb-900));
+  color:var(--paper-50);
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+.component-card > summary::-webkit-details-marker{ display:none; }
+.component-card > summary .ctitle{ display:flex; flex-direction:column; gap:2px; }
+.component-card > summary h3{ margin:0; color:var(--white); font-size:1.05rem; font-family:var(--font-mono); }
+.component-card > summary small{ color:var(--copper-100); font-size:.74rem; text-transform:uppercase; letter-spacing:.06em; }
+.disclosure-arrow{ width:20px; height:20px; flex-shrink:0; transition:transform .15s ease; color:var(--gold-500); }
+.component-card[open] > summary .disclosure-arrow{ transform:rotate(180deg); }
+
+.component-diagram-box{
+  padding:18px;
+  background:
+    radial-gradient(circle, rgba(15,61,46,.10) 1.4px, transparent 1.4px) 0 0/16px 16px,
+    var(--paper-50);
+  display:flex; align-items:center; justify-content:center;
+  border-bottom:1px solid var(--line-300);
+}
+.component-diagram{ width:100%; max-width:280px; height:auto; }
+.component-body{ padding:16px 18px 20px; }
+.component-body h4{ margin:14px 0 6px; font-size:.82rem; text-transform:uppercase; letter-spacing:.06em; color:var(--copper-700); }
+.component-body h4:first-child{ margin-top:0; }
+.component-body p{ margin:0 0 10px; font-size:.94rem; }
+.schematic-row{ display:flex; align-items:center; gap:14px; margin:10px 0; padding:10px; background:var(--paper-100); border-radius:var(--radius-sm); border:1px dashed var(--line-400); }
+.schematic-row svg{ width:90px; height:46px; flex-shrink:0; }
+.schematic-row span{ font-size:.85rem; color:var(--ink-700); }
+
+/* ============================= LESSON VIEW ============================= */
+.lesson-header{ margin-bottom:22px; }
+.lesson-tools-wrap{ display:flex; flex-direction:column; gap:26px; margin:26px 0; }
+.step-marker{
+  display:inline-flex; align-items:center justify-content:center;
+  width:28px; height:28px; border-radius:50%;
+  background:var(--gold-500); color:var(--pcb-900); font-weight:800; font-family:var(--font-mono);
+  margin-right:10px; font-size:.85rem;
+}
+.lesson-section-title{ display:flex; align-items:center; margin-bottom:6px; }
+
+/* ============================= TOOL WIDGETS (shared) ============================= */
+.tool-widget{
+  background:var(--white); border:1px solid var(--line-300); border-radius:var(--radius-lg);
+  padding:22px; box-shadow:var(--shadow-sm);
+}
+.tool-widget h3{ margin-top:0; }
+.tool-tabs{ display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+.tool-tab{
+  padding:9px 16px; border-radius:var(--radius-pill); border:2px solid var(--line-400);
+  background:var(--paper-50); font-weight:700; font-size:.88rem; cursor:pointer; min-height:40px;
+}
+.tool-tab[aria-selected="true"]{ background:var(--pcb-800); color:var(--white); border-color:var(--pcb-800); }
+
+.band-group{ margin:14px 0 20px; }
+.band-group-label{ font-weight:700; font-size:.86rem; margin-bottom:8px; display:block; color:var(--pcb-800); }
+.color-swatch-row{ display:flex; flex-wrap:wrap; gap:8px; }
+.color-swatch{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:6px 12px 6px 6px;
+  border:2px solid var(--line-400);
+  border-radius:var(--radius-pill);
+  background:var(--white);
+  cursor:pointer; font-size:.85rem; font-weight:600; color:var(--ink-900);
+  min-height:42px;
+}
+.color-swatch .swatch-dot{ width:22px; height:22px; border-radius:50%; border:1px solid rgba(0,0,0,.3); flex-shrink:0; }
+.color-swatch[aria-pressed="true"]{ border-color:var(--copper-600); background:var(--paper-200); box-shadow:0 0 0 2px var(--copper-400,var(--copper-500)) inset; }
+.color-swatch:hover{ border-color:var(--copper-500); }
+
+.readout{
+  background:var(--pcb-800); color:var(--paper-50); border-radius:var(--radius-md);
+  padding:18px 20px; margin:20px 0; text-align:center;
+  border:1px solid var(--pcb-600);
+}
+.readout .value{ font-family:var(--font-mono); font-size:1.9rem; font-weight:800; color:var(--white); }
+.readout .breakdown{ font-family:var(--font-mono); font-size:.82rem; color:var(--copper-100); margin-top:6px; }
+
+.feedback-box{
+  border-radius:var(--radius-md); padding:14px 16px; margin:14px 0; font-weight:600;
+  border:2px solid transparent;
+}
+.feedback-box.correct{ background:var(--success-100); color:var(--success-700); border-color:var(--success-600); }
+.feedback-box.incorrect{ background:var(--danger-100); color:var(--danger-700); border-color:var(--danger-600); }
+.feedback-box p{ margin:0 0 4px; font-weight:400; }
+.feedback-box p:last-child{ margin-bottom:0; }
+.band-check-list{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; font-family:var(--font-mono); font-size:.82rem; }
+.band-check-list span{ padding:3px 8px; border-radius:var(--radius-sm); background:rgba(255,255,255,.6); }
+
+.field-row{ display:flex; flex-wrap:wrap; gap:16px; margin:16px 0; }
+.field{ display:flex; flex-direction:column; gap:6px; min-width:160px; flex:1; }
+.field label{ font-weight:700; font-size:.86rem; color:var(--pcb-800); }
+.field input, .field select{
+  padding:10px 12px; border:2px solid var(--line-400); border-radius:var(--radius-sm);
+  font-size:1rem; font-family:var(--font-mono); min-height:44px; background:var(--white); color:var(--ink-900);
+}
+.field input:focus, .field select:focus{ border-color:var(--copper-500); }
+.field .hint{ font-size:.76rem; color:var(--ink-500); font-family:var(--font-sans); }
+
+.mc-options{ display:flex; flex-direction:column; gap:10px; margin:14px 0; }
+.mc-option{
+  display:flex; align-items:center; gap:10px;
+  padding:12px 14px; border:2px solid var(--line-400); border-radius:var(--radius-md);
+  cursor:pointer; background:var(--white); min-height:44px;
+}
+.mc-option:hover{ border-color:var(--copper-500); }
+.mc-option input{ width:18px; height:18px; flex-shrink:0; }
+.mc-option.opt-correct{ border-color:var(--success-600); background:var(--success-100); }
+.mc-option.opt-incorrect{ border-color:var(--danger-600); background:var(--danger-100); }
+
+/* ============================= QUIZ ============================= */
+.quiz-block{ background:var(--white); border:1px solid var(--line-300); border-radius:var(--radius-lg); padding:24px; margin-top:30px; box-shadow:var(--shadow-sm); }
+.quiz-question{ padding:18px 0; border-bottom:1px solid var(--paper-300); }
+.quiz-question:last-of-type{ border-bottom:none; }
+.quiz-question legend{ font-weight:700; padding:0; margin-bottom:10px; font-size:1rem; color:var(--ink-900); }
+.quiz-question fieldset{ border:none; padding:0; margin:0; }
+.quiz-explain{ font-size:.86rem; margin-top:8px; padding:10px 12px; border-radius:var(--radius-sm); background:var(--paper-100); }
+.quiz-summary{
+  text-align:center; padding:22px; border-radius:var(--radius-md); margin-top:12px;
+  background:var(--pcb-800); color:var(--white);
+}
+.quiz-summary .score-big{ font-size:2.2rem; font-weight:800; font-family:var(--font-mono); color:var(--gold-500); }
+
+/* ============================= MISC ============================= */
+.note-box{
+  background:var(--paper-200); border-left:4px solid var(--copper-500);
+  padding:12px 16px; border-radius:0 var(--radius-sm) var(--radius-sm) 0; font-size:.9rem; margin:16px 0;
+}
+.privacy-note{ font-size:.78rem; color:var(--ink-500); margin-top:6px; }
+.jump-nav{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:22px; }
+.jump-nav button{
+  padding:8px 14px; border-radius:var(--radius-pill); background:var(--white); border:1px solid var(--line-400);
+  cursor:pointer; font-size:.85rem; font-weight:600; color:var(--pcb-800); min-height:40px;
+}
+.jump-nav button:hover{ border-color:var(--copper-500); }
+.diagram-caveat{ font-size:.78rem; color:var(--ink-500); font-style:italic; }
+
+/* ============================= RESPONSIVE ============================= */
+@media (max-width: 860px){
+  .nav-toggle{ display:inline-flex; }
+  .sidebar{
+    position:fixed; top:var(--header-h); left:0; bottom:0; z-index:160;
+    transform:translateX(-100%);
+    width:82vw; max-width:300px;
+    box-shadow:var(--shadow-lg);
+  }
+  .sidebar.open{ transform:translateX(0); }
+  .main-content{ margin-left:0; padding:20px 16px 50px; }
+  .site-footer{ margin-left:0; }
+  .hero{ padding:26px 20px; }
+}
+@media (prefers-reduced-motion: no-preference){
+  .sidebar{ transition:transform .22s ease; }
+}
+@media (max-width:520px){
+  .field-row{ gap:12px; }
+  .field{ min-width:0; flex-basis:100%; }
+  h1{ font-size:1.5rem; }
+  .readout .value{ font-size:1.5rem; }
+}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<div class="app-shell">
+  <header class="site-header">
+    <button type="button" class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="sidebar" aria-label="Toggle navigation menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="#home" class="brand" data-route-link="home">
+      <svg class="brand-chip" viewBox="0 0 100 100" aria-hidden="true">
+        <rect x="18" y="18" width="64" height="64" rx="8" fill="#0f3d2e" stroke="#d4af37" stroke-width="4"/>
+        <rect x="34" y="34" width="32" height="32" rx="3" fill="none" stroke="#d4af37" stroke-width="4"/>
+        <g stroke="#d4af37" stroke-width="4"><line x1="50" y1="6" x2="50" y2="18"/><line x1="50" y1="82" x2="50" y2="94"/><line x1="6" y1="50" x2="18" y2="50"/><line x1="82" y1="50" x2="94" y2="50"/></g>
+      </svg>
+      <span class="brand-text">
+        <span class="brand-name">MicroLab</span>
+        <span class="brand-tagline">Electronics Lab</span>
+      </span>
+    </a>
+    <div class="header-spacer"></div>
+    <span class="header-hint">themicrolab.org</span>
+  </header>
+
+  <div class="app-body">
+    <div class="nav-backdrop" id="navBackdrop"></div>
+    <nav class="sidebar" id="sidebar" aria-label="Main navigation">
+      <ul class="nav-list">
+        <li><a href="#home" data-route-link="home"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Home</a></li>
+        <li><a href="#library" data-route-link="library"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>Component Library</a></li>
+        <li class="nav-section-label">Lessons</li>
+        <li><ul class="nav-sublist" id="lessonNavList"></ul></li>
+        <li><a href="#tools" data-route-link="tools"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a4 4 0 0 1-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 1 5.4-5.4z"/></svg>Tools</a></li>
+      </ul>
+    </nav>
+
+    <main id="main-content" class="main-content" tabindex="-1">
+      <div class="main-inner" id="viewRoot"></div>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <div><strong>MicroLab</strong> · themicrolab.org — learn electronics by building it.</div>
+    <div class="privacy-note">Your lesson progress is saved only on this device (no accounts, no server).</div>
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+// ============================================================================
+// DATA: resistor color code table
+// ============================================================================
+var RESISTOR_COLORS = [
+  { name:"black",  hex:"#2b2b2b", digit:0, mult:1,          tol:null },
+  { name:"brown",  hex:"#7b4a2d", digit:1, mult:10,         tol:1    },
+  { name:"red",    hex:"#d43b3b", digit:2, mult:100,        tol:2    },
+  { name:"orange", hex:"#e07b28", digit:3, mult:1000,       tol:null },
+  { name:"yellow", hex:"#e8c22e", digit:4, mult:10000,      tol:null },
+  { name:"green",  hex:"#2e8b4f", digit:5, mult:100000,     tol:0.5  },
+  { name:"blue",   hex:"#2f5fa8", digit:6, mult:1000000,    tol:0.25 },
+  { name:"violet", hex:"#7b4fa6", digit:7, mult:10000000,   tol:0.1  },
+  { name:"gray",   hex:"#8c8c8c", digit:8, mult:100000000,  tol:0.05 },
+  { name:"white",  hex:"#f5f5f5", digit:9, mult:1000000000, tol:null },
+  { name:"gold",   hex:"#cf9a2e", digit:null, mult:0.1,     tol:5    },
+  { name:"silver", hex:"#c7c7c7", digit:null, mult:0.01,    tol:10   }
+];
+var DIGIT_COLORS = RESISTOR_COLORS.filter(function(c){ return c.digit !== null; });
+var MULT_COLORS = RESISTOR_COLORS; // any of the 12 can be a multiplier band
+var TOL_COLORS = RESISTOR_COLORS.filter(function(c){ return c.tol !== null; });
+var LIGHT_HEX = ["#f5f5f5","#e8c22e","#c7c7c7"]; // needs outline for visibility
+
+function colorByName(name){
+  for (var i=0;i<RESISTOR_COLORS.length;i++){ if (RESISTOR_COLORS[i].name===name) return RESISTOR_COLORS[i]; }
+  return null;
+}
+function multExponentColorName(exp){
+  var map = ["black","brown","red","orange","yellow","green"];
+  return map[exp] || "black";
+}
+
+var E12_BASE = [10,12,15,18,22,27,33,39,47,56,68,82];
+
+// ============================================================================
+// UTILS
+// ============================================================================
+function trimNum(n){
+  if (!isFinite(n)) return "0";
+  var r = parseFloat(n.toPrecision(6));
+  return r.toString();
+}
+function formatOhms(ohms){
+  var a = Math.abs(ohms);
+  if (a >= 1e9) return trimNum(ohms/1e9) + " GΩ";
+  if (a >= 1e6) return trimNum(ohms/1e6) + " MΩ";
+  if (a >= 1e3) return trimNum(ohms/1e3) + " kΩ";
+  return trimNum(ohms) + " Ω";
+}
+function formatFaradsFromPF(pf){
+  var a = Math.abs(pf);
+  if (a >= 1e6) return trimNum(pf/1e6) + " µF";
+  if (a >= 1e3) return trimNum(pf/1e3) + " nF";
+  return trimNum(pf) + " pF";
+}
+function nearestE12AtOrAbove(value){
+  if (value <= 0) return E12_BASE[0];
+  var exp = Math.floor(Math.log10(value));
+  for (var e = exp - 1; e <= exp + 1; e++){
+    for (var i=0;i<E12_BASE.length;i++){
+      var candidate = E12_BASE[i] * Math.pow(10, e);
+      if (candidate >= value - 1e-9) return roundSig(candidate, 3);
+    }
+  }
+  return roundSig(value, 2);
+}
+function roundSig(n, sig){
+  if (n === 0) return 0;
+  var d = Math.ceil(Math.log10(Math.abs(n)));
+  var power = sig - d;
+  var mag = Math.pow(10, power);
+  return Math.round(n * mag) / mag;
+}
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, function(c){
+    return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+  });
+}
+function shuffle(arr){
+  var a = arr.slice();
+  for (var i=a.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var t=a[i]; a[i]=a[j]; a[j]=t;
+  }
+  return a;
+}
+function uid(prefix){ return prefix + "_" + Math.random().toString(36).slice(2,9); }
+
+// ============================================================================
+// PROGRESS (localStorage)
+// ============================================================================
+var PROGRESS_KEY = "microlab_progress_v1";
+function loadProgress(){
+  try{
+    var raw = localStorage.getItem(PROGRESS_KEY);
+    if (!raw) return { lessons:{} };
+    var parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return { lessons:{} };
+    if (!parsed.lessons) parsed.lessons = {};
+    return parsed;
+  }catch(e){ return { lessons:{} }; }
+}
+function saveProgress(p){
+  try{ localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); }catch(e){ /* storage unavailable; app still works */ }
+}
+function recordQuizResult(lessonId, score, total){
+  var p = loadProgress();
+  var prev = p.lessons[lessonId] || { attempts:0, bestScore:0 };
+  p.lessons[lessonId] = {
+    attempts: (prev.attempts||0) + 1,
+    bestScore: Math.max(prev.bestScore||0, score),
+    lastScore: score,
+    total: total,
+    lastAttempt: new Date().toISOString()
+  };
+  saveProgress(p);
+  updateSidebarBadges();
+}
+function resetProgress(){
+  saveProgress({ lessons:{} });
+  updateSidebarBadges();
+  router();
+}
+
+// ============================================================================
+// SVG GENERATORS — physical component diagrams
+// ============================================================================
+function svgResistor(bandHexes){
+  var positions = bandHexes.length >= 5 ? [86,108,130,152,206] : [92,116,140,206];
+  var bandW = 14, bodyY = 30, bodyH = 60;
+  var bands = "";
+  for (var i=0;i<bandHexes.length;i++){
+    var x = positions[i];
+    var outline = LIGHT_HEX.indexOf(bandHexes[i]) !== -1;
+    bands += '<rect x="'+x+'" y="'+bodyY+'" width="'+bandW+'" height="'+bodyH+'" fill="'+bandHexes[i]+'"'+(outline?' stroke="#00000030" stroke-width="1"':'')+'/>';
+  }
+  return '<svg viewBox="0 0 300 120" role="img" aria-label="Resistor with colored bands" class="component-diagram">'
+    + '<line x1="0" y1="60" x2="60" y2="60" stroke="#9a9a9a" stroke-width="5"/>'
+    + '<line x1="240" y1="60" x2="300" y2="60" stroke="#9a9a9a" stroke-width="5"/>'
+    + '<rect x="60" y="'+bodyY+'" width="180" height="'+bodyH+'" rx="16" fill="#d9c19a" stroke="#a8895c" stroke-width="2"/>'
+    + bands + '</svg>';
+}
+function svgCapacitorCeramic(code){
+  code = code || "104";
+  return '<svg viewBox="0 0 220 160" role="img" aria-label="Ceramic capacitor" class="component-diagram">'
+    + '<line x1="70" y1="150" x2="70" y2="96" stroke="#9a9a9a" stroke-width="5"/>'
+    + '<line x1="150" y1="150" x2="150" y2="96" stroke="#9a9a9a" stroke-width="5"/>'
+    + '<ellipse cx="110" cy="60" rx="66" ry="52" fill="#e2b25a" stroke="#a8792e" stroke-width="3"/>'
+    + '<ellipse cx="110" cy="60" rx="66" ry="52" fill="none" stroke="#c99a44" stroke-width="1"/>'
+    + '<text x="110" y="68" text-anchor="middle" font-family="ui-monospace,Consolas,monospace" font-size="30" font-weight="700" fill="#3a2a10">'+escapeHtml(code)+'</text>'
+    + '</svg>';
+}
+function svgCapacitorElectrolytic(){
+  return '<svg viewBox="0 0 200 180" role="img" aria-label="Electrolytic capacitor" class="component-diagram">'
+    + '<line x1="70" y1="175" x2="70" y2="140" stroke="#9a9a9a" stroke-width="5"/>'
+    + '<line x1="130" y1="175" x2="130" y2="150" stroke="#9a9a9a" stroke-width="5"/>'
+    + '<rect x="40" y="30" width="120" height="112" rx="10" fill="#2b6b8f" stroke="#184a63" stroke-width="3"/>'
+    + '<rect x="40" y="30" width="34" height="112" rx="10" fill="#f2f2f2" opacity=".18"/>'
+    + '<g fill="#f2f2f2"><rect x="40" y="30" width="30" height="112" fill="#184a63"/>'
+    + '<text x="55" y="60" text-anchor="middle" font-size="20" font-weight="800">–</text>'
+    + '<text x="55" y="85" text-anchor="middle" font-size="20" font-weight="800">–</text>'
+    + '<text x="55" y="110" text-anchor="middle" font-size="20" font-weight="800">–</text></g>'
+    + '<text x="118" y="90" text-anchor="middle" font-family="ui-monospace,Consolas,monospace" font-size="16" font-weight="700" fill="#fff">100µF</text>'
+    + '<text x="118" y="110" text-anchor="middle" font-family="ui-monospace,Consolas,monospace" font-size="13" fill="#dbe9f0">16V</text>'
+    + '<text x="130" y="146" text-anchor="middle" font-size="18" font-weight="800" fill="#184a63">+</text>'
+    + '</svg>';
+}
+function svgLED(fill){
+  fill = fill || "#e0402d";
+  return '<svg viewBox="0 0 120 150" role="img" aria-label="LED" class="component-diagram">'
+    + '<line x1="40" y1="100" x2="40" y2="140" stroke="#c9a24a" stroke-width="4"/>'
+    + '<line x1="80" y1="100" x2="80" y2="122" stroke="#c9a24a" stroke-width="4"/>'
+    + '<path d="M20,100 L20,55 A40,40 0 0,1 100,55 L100,100 Z" fill="'+fill+'" stroke="#8a2418" stroke-width="3" opacity=".92"/>'
+    + '<ellipse cx="50" cy="45" rx="14" ry="9" fill="#ffffff" opacity=".35"/>'
+    + '<text x="40" y="150" text-anchor="middle" font-size="13" fill="#41453f" font-weight="700">+</text>'
+    + '<text x="80" y="150" text-anchor="middle" font-size="13" fill="#41453f" font-weight="700">–</text>'
+    + '<text x="40" y="118" text-anchor="middle" font-size="10" fill="#6b6f66">long</text>'
+    + '<text x="80" y="118" text-anchor="middle" font-size="10" fill="#6b6f66">short</text>'
+    + '</svg>';
+}
+function svgDiode(){
+  return '<svg viewBox="0 0 220 90" role="img" aria-label="Diode" class="component-diagram">'
+    + '<line x1="0" y1="45" x2="55" y2="45" stroke="#9a9a9a" stroke-width="5"/>'
+    + '<line x1="165" y1="45" x2="220" y2="45" stroke="#9a9a9a" stroke-width="5"/>'
+    + '<rect x="55" y="22" width="110" height="46" rx="6" fill="#2b2b2b"/>'
+    + '<rect x="140" y="22" width="12" height="46" fill="#e8e8e8"/>'
+    + '<text x="185" y="30" font-size="11" fill="#6b6f66">cathode</text>'
+    + '</svg>';
+}
+function svgTransistor(){
+  return '<svg viewBox="0 0 220 200" role="img" aria-label="NPN transistor" class="component-diagram">'
+    + '<path d="M60,20 a40,40 0 0 1 80,0 v60 a10,10 0 0 1 -10,10 h-60 a10,10 0 0 1 -10,-10 z" fill="#2b2b2b" stroke="#111" stroke-width="2"/>'
+    + '<line x1="75" y1="90" x2="75" y2="145" stroke="#c7c7c7" stroke-width="5"/>'
+    + '<line x1="100" y1="90" x2="100" y2="165" stroke="#c7c7c7" stroke-width="5"/>'
+    + '<line x1="125" y1="90" x2="125" y2="145" stroke="#c7c7c7" stroke-width="5"/>'
+    + '<text x="75" y="165" text-anchor="middle" font-size="16" font-weight="800" fill="#41453f">E</text>'
+    + '<text x="100" y="185" text-anchor="middle" font-size="16" font-weight="800" fill="#41453f">B</text>'
+    + '<text x="125" y="165" text-anchor="middle" font-size="16" font-weight="800" fill="#41453f">C</text>'
+    + '</svg>';
+}
+function svgBreadboard(){
+  var dots = "";
+  for (var col=0; col<10; col++){
+    for (var row=0; row<5; row++){
+      var x = 40 + col*24, y = 62 + row*8;
+      dots += '<circle cx="'+x+'" cy="'+y+'" r="2" fill="#8a8368"/>';
+    }
+  }
+  var railDotsTop="", railDotsBottom="";
+  for (var c=0;c<12;c++){
+    var x2 = 20 + c*24;
+    railDotsTop += '<circle cx="'+x2+'" cy="24" r="2" fill="#c94040"/><circle cx="'+x2+'" cy="34" r="2" fill="#2f5fa8"/>';
+    railDotsBottom += '<circle cx="'+x2+'" cy="146" r="2" fill="#c94040"/><circle cx="'+x2+'" cy="156" r="2" fill="#2f5fa8"/>';
+  }
+  return '<svg viewBox="0 0 320 180" role="img" aria-label="Breadboard layout" class="component-diagram">'
+    + '<rect x="8" y="8" width="304" height="164" rx="8" fill="#f0ead9" stroke="#c9bfa0" stroke-width="2"/>'
+    + '<line x1="16" y1="24" x2="300" y2="24" stroke="#c94040" stroke-width="2"/>'
+    + '<line x1="16" y1="34" x2="300" y2="34" stroke="#2f5fa8" stroke-width="2"/>'
+    + railDotsTop
+    + '<line x1="16" y1="146" x2="300" y2="146" stroke="#c94040" stroke-width="2"/>'
+    + '<line x1="16" y1="156" x2="300" y2="156" stroke="#2f5fa8" stroke-width="2"/>'
+    + railDotsBottom
+    + '<line x1="16" y1="96" x2="300" y2="96" stroke="#c9bfa0" stroke-width="2" stroke-dasharray="4 3"/>'
+    + dots
+    + '<rect x="36" y="58" width="20" height="36" rx="4" fill="none" stroke="#c9793f" stroke-width="2"/>'
+    + '<text x="46" y="52" text-anchor="middle" font-size="9" fill="#9a5a26">connected</text>'
+    + '</svg>';
+}
+function svgESP32(){
+  var pinsLeft = ["3V3","EN","GPIO","GPIO","ADC","ADC","GND"];
+  var pinsRight = ["GND","GPIO","TX","RX","GPIO","GPIO","GPIO"];
+  var left="", right="";
+  for (var i=0;i<pinsLeft.length;i++){
+    var y = 40 + i*34;
+    left += '<circle cx="26" cy="'+y+'" r="4" fill="#d4af37"/><text x="36" y="'+(y+4)+'" font-size="12" fill="#f7f4ea" font-family="ui-monospace,Consolas,monospace">'+pinsLeft[i]+'</text>';
+    right += '<circle cx="234" cy="'+y+'" r="4" fill="#d4af37"/><text x="224" y="'+(y+4)+'" text-anchor="end" font-size="12" fill="#f7f4ea" font-family="ui-monospace,Consolas,monospace">'+pinsRight[i]+'</text>';
+  }
+  return '<svg viewBox="0 0 260 320" role="img" aria-label="ESP32 board pin categories" class="component-diagram">'
+    + '<rect x="14" y="10" width="232" height="300" rx="10" fill="#0f3d2e" stroke="#0a2a1f" stroke-width="3"/>'
+    + '<rect x="105" y="0" width="50" height="22" rx="3" fill="#b7b7b7"/>'
+    + '<rect x="80" y="120" width="100" height="80" rx="6" fill="#2b2b2b" stroke="#111" stroke-width="2"/>'
+    + '<text x="130" y="165" text-anchor="middle" font-size="12" fill="#d4af37" font-family="ui-monospace,Consolas,monospace">ESP32</text>'
+    + left + right
+    + '</svg>';
+}
+
+// ---- compact schematic symbols ----
+function svgSchematicResistor(){
+  return '<svg viewBox="0 0 100 50"><polyline points="0,25 14,25 21,10 31,40 41,10 51,40 61,10 71,25 100,25" fill="none" stroke="#1c1f1d" stroke-width="2.4"/></svg>';
+}
+function svgSchematicCapacitor(polarized){
+  var extra = polarized
+    ? '<path d="M58,10 Q66,25 58,40" fill="none" stroke="#1c1f1d" stroke-width="2.4"/><text x="30" y="14" font-size="12" fill="#1c1f1d">+</text>'
+    : '<line x1="58" y1="10" x2="58" y2="40" stroke="#1c1f1d" stroke-width="2.4"/>';
+  return '<svg viewBox="0 0 100 50"><line x1="0" y1="25" x2="42" y2="25" stroke="#1c1f1d" stroke-width="2.4"/>'
+    + '<line x1="42" y1="10" x2="42" y2="40" stroke="#1c1f1d" stroke-width="2.4"/>'
+    + extra
+    + '<line x1="'+(polarized?58:58)+'" y1="25" x2="100" y2="25" stroke="#1c1f1d" stroke-width="2.4"/></svg>';
+}
+function svgSchematicDiode(){
+  return '<svg viewBox="0 0 100 50"><line x1="0" y1="25" x2="35" y2="25" stroke="#1c1f1d" stroke-width="2.4"/>'
+    + '<polygon points="35,10 35,40 65,25" fill="none" stroke="#1c1f1d" stroke-width="2.4"/>'
+    + '<line x1="65" y1="10" x2="65" y2="40" stroke="#1c1f1d" stroke-width="2.4"/>'
+    + '<line x1="65" y1="25" x2="100" y2="25" stroke="#1c1f1d" stroke-width="2.4"/></svg>';
+}
+function svgSchematicLED(){
+  return '<svg viewBox="0 0 100 50"><line x1="0" y1="30" x2="35" y2="30" stroke="#1c1f1d" stroke-width="2.4"/>'
+    + '<polygon points="35,15 35,45 65,30" fill="none" stroke="#1c1f1d" stroke-width="2.4"/>'
+    + '<line x1="65" y1="15" x2="65" y2="45" stroke="#1c1f1d" stroke-width="2.4"/>'
+    + '<line x1="65" y1="30" x2="100" y2="30" stroke="#1c1f1d" stroke-width="2.4"/>'
+    + '<g stroke="#1c1f1d" stroke-width="1.8"><line x1="55" y1="10" x2="62" y2="0"/><line x1="59" y1="3" x2="62" y2="0"/><line x1="59" y1="0" x2="62" y2="0"/>'
+    + '<line x1="65" y1="10" x2="72" y2="0"/><line x1="69" y1="3" x2="72" y2="0"/><line x1="69" y1="0" x2="72" y2="0"/></g></svg>';
+}
+function svgSchematicTransistor(){
+  return '<svg viewBox="0 0 100 50"><circle cx="50" cy="25" r="22" fill="none" stroke="#1c1f1d" stroke-width="2"/>'
+    + '<line x1="30" y1="12" x2="30" y2="38" stroke="#1c1f1d" stroke-width="2.4"/>'
+    + '<line x1="12" y1="25" x2="30" y2="25" stroke="#1c1f1d" stroke-width="2.4"/>'
+    + '<line x1="30" y1="16" x2="52" y2="8" stroke="#1c1f1d" stroke-width="2.2"/>'
+    + '<line x1="30" y1="34" x2="52" y2="42" stroke="#1c1f1d" stroke-width="2.2"/>'
+    + '<polygon points="52,42 43,39 47,34" fill="#1c1f1d"/>'
+    + '<line x1="52" y1="8" x2="52" y2="0" stroke="#1c1f1d" stroke-width="2.2"/>'
+    + '<line x1="52" y1="42" x2="52" y2="50" stroke="#1c1f1d" stroke-width="2.2"/></svg>';
+}
+
+// ============================================================================
+// DATA: component library
+// ============================================================================
+var COMPONENTS = {
+  resistor: {
+    id:"resistor", name:"Resistor", category:"Passive Component", unit:"Ohms (Ω)",
+    diagram:function(){ return svgResistor(["#e8c22e","#7b4fa6","#d43b3b","#cf9a2e"]); },
+    schematic: svgSchematicResistor(),
+    description:"A resistor controls how much electric current can flow through a circuit. Think of it like a narrow section of pipe that slows down water flow — the resistor \"resists\" the flow of electricity, turning a little bit of that electrical energy into heat.",
+    howToRead:"Most resistors don't have their value printed as a number — instead they use 4 colored bands. Read left to right, starting from the end that ISN'T followed by a gap: the first two bands are digits, the third band is a multiplier (how many zeros to add), and the fourth band is the tolerance — how close to the labeled value the real resistor actually is. Yellow-Violet-Red-Gold means 4, 7, ×100, so 47 × 100 = 4,700 Ω = 4.7 kΩ, accurate to within ±5%. Some precision resistors use 5 bands (3 digits + multiplier + tolerance) for tighter accuracy. Try it in the Resistor Color-Code Trainer tool.",
+    example:"LEDs need a resistor in series to survive. Powering a red LED (forward voltage ≈ 2V) from a 5V ESP32 pin at about 20mA: R = (5V − 2V) ÷ 0.02A = 150 Ω. Without that resistor, the LED draws far more current than it can handle and burns out almost instantly. Try the LED Resistor Calculator tool."
+  },
+  cap_ceramic: {
+    id:"cap_ceramic", name:"Capacitor (Ceramic)", category:"Passive Component", unit:"Farads (µF, nF, pF)",
+    diagram:function(){ return svgCapacitorCeramic("104"); },
+    schematic: svgSchematicCapacitor(false),
+    description:"A capacitor stores a small amount of electrical energy and can release it very quickly — like a tiny, fast-charging battery. Ceramic capacitors are small, inexpensive, and non-polarized, meaning it doesn't matter which way around you connect them.",
+    howToRead:"Ceramic capacitors are usually marked with a 3-digit code instead of a full number. The first two digits are significant digits, and the third digit is the multiplier (a power of ten), giving a value in picofarads (pF). \"104\" means 10 × 10⁴ = 100,000 pF, which equals 100 nF, or 0.1 µF. Try decoding real codes in the Capacitor Code Reader tool.",
+    example:"A 0.1 µF (\"104\") ceramic capacitor is one of the most common parts in any electronics project — placed right next to a microcontroller's power pins, like on an ESP32, to smooth out tiny voltage fluctuations and keep the chip running reliably."
+  },
+  cap_electrolytic: {
+    id:"cap_electrolytic", name:"Capacitor (Electrolytic)", category:"Passive Component", unit:"Farads (µF)",
+    diagram:function(){ return svgCapacitorElectrolytic(); },
+    schematic: svgSchematicCapacitor(true),
+    description:"Electrolytic capacitors store much more energy than ceramic ones — often thousands of times more — which makes them useful for smoothing out power supplies or storing a quick burst of energy. The tradeoff: they are polarized, meaning they MUST be connected the correct way around.",
+    howToRead:"Electrolytic capacitors print their value directly, like \"100µF 16V\" (100 microfarads, rated up to 16 volts). Look for the polarity markings: a stripe with minus signs (–) runs down the negative side, and the negative lead is also shorter than the positive lead. Connecting one backwards can damage it — always double-check before powering up your circuit.",
+    example:"A 470µF capacitor placed across a battery's + and − lines can smooth out sudden voltage dips when a motor or bright LED switches on, preventing a microcontroller from glitching or resetting."
+  },
+  led: {
+    id:"led", name:"LED (Light Emitting Diode)", category:"Semiconductor", unit:"Forward Voltage (V), Current (mA)",
+    diagram:function(){ return svgLED("#e0402d"); },
+    schematic: svgSchematicLED(),
+    description:"An LED gives off light when electric current flows through it in the correct direction. It's a type of diode, so it's polarized — current only flows (and light only turns on) one way.",
+    howToRead:"Look at the two legs: the longer leg is the anode (+) and the shorter leg is the cathode (−). Many LEDs also have a small flat spot on the rim of the case near the cathode side, useful once the legs have been trimmed. Different colors need different forward voltages: roughly 1.8–2.2V for red/yellow, and around 3.0–3.4V for blue/white.",
+    example:"Connect an LED directly to a battery with no resistor and it will draw far more current than it can handle, burning out in a fraction of a second. That's why every LED circuit pairs the LED with a correctly sized resistor — see the Resistor card and the LED Resistor Calculator tool."
+  },
+  diode: {
+    id:"diode", name:"Diode", category:"Semiconductor", unit:"Forward Voltage (V)",
+    diagram:function(){ return svgDiode(); },
+    schematic: svgSchematicDiode(),
+    description:"A diode lets electric current flow in only one direction, like a one-way valve for electricity. If current tries to flow the wrong way, the diode blocks it almost completely.",
+    howToRead:"A printed band near one end marks the cathode — the end current exits from when flowing correctly. Current flows into the anode (unmarked end) and out of the cathode (banded end), matching the direction the schematic triangle symbol points.",
+    example:"Diodes are often placed across a battery's input to protect a circuit if someone accidentally connects the battery backwards — the diode blocks the reversed current instead of letting it damage other components."
+  },
+  transistor: {
+    id:"transistor", name:"Transistor (NPN)", category:"Semiconductor", unit:"Current gain (hFE)",
+    diagram:function(){ return svgTransistor(); },
+    schematic: svgSchematicTransistor(),
+    description:"A transistor acts like an electronically controlled switch (or amplifier). A small current flowing into the Base (B) pin controls a much larger current flowing from the Collector (C) to the Emitter (E) — like a light touch on a valve controlling a much bigger flow of water.",
+    howToRead:"A common small NPN transistor (like a 2N2222 or BC547) comes in a half-cylinder plastic package with 3 legs: Emitter, Base, and Collector. Pin order varies between transistor models, so always check the specific datasheet before wiring one up — never guess.",
+    example:"An ESP32 GPIO pin can only safely supply a small amount of current — not nearly enough for a motor or a strip of bright LEDs. Instead, the GPIO pin connects to the transistor's Base through a resistor; the transistor then switches the larger Collector-to-Emitter current on and off, letting a tiny microcontroller pin control something much more powerful."
+  },
+  breadboard: {
+    id:"breadboard", name:"Breadboard", category:"Prototyping Tool", unit:"N/A",
+    diagram:function(){ return svgBreadboard(); },
+    schematic: null,
+    description:"A breadboard lets you build and test circuits by pushing component legs and wires into holes — no soldering required. It's the fastest way to try out an idea and change it if it doesn't work.",
+    howToRead:"Down the middle, holes are grouped in short vertical strips of 5 — every hole in one strip is electrically connected to the others in that same strip. A center gap separates the two halves. Along the top and bottom edges, long horizontal power rails (usually marked with a red + line and a blue or black − line) run the full length of the board, for distributing power to many parts of a circuit at once.",
+    example:"To build the LED + resistor circuit: connect the battery's + to the top power rail, run a wire from the rail into a 5-hole strip, place the resistor from that strip into another strip, place the LED's anode into that second strip and its cathode into a third strip, then wire that third strip down to the − power rail."
+  },
+  esp32: {
+    id:"esp32", name:"ESP32 Pinout Basics", category:"Prototyping Tool", unit:"3.3V logic",
+    diagram:function(){ return svgESP32(); },
+    schematic: null,
+    description:"The ESP32 is a small microcontroller board with built-in WiFi and Bluetooth. It runs code you write, and its pins let that code sense and control real-world electronics — reading a button press, lighting an LED, driving a motor through a transistor, and more.",
+    howToRead:"Pin layouts vary between different ESP32 board models, so always check your specific board's silkscreen labels or datasheet — but most boards share the same pin categories: 3V3 (3.3 volt power output), GND (ground, the return path for current), GPIO (General Purpose Input/Output — digital pins that can sense a button or switch something on), ADC-capable pins (which can also read a smoothly varying analog signal, like from a dial), and TX/RX (used for serial communication).",
+    example:"To blink an LED from code: connect the LED's cathode through a correctly sized resistor to GND, and connect the LED's anode to a GPIO pin. Code running on the ESP32 sets that GPIO pin HIGH (≈3.3V) to turn the LED on and LOW (0V) to turn it off — combining the resistor, LED, and breadboard ideas into one real project.",
+    caveat:"Diagram shows representative pin categories only — always verify against your specific board's silkscreen."
+  }
+};
+var COMPONENT_ORDER = ["resistor","cap_ceramic","cap_electrolytic","led","diode","transistor","breadboard","esp32"];
+
+// ============================================================================
+// DATA: quiz question banks
+// ============================================================================
+var QUIZ_RESISTORS = [
+  { q:"What is the main job of a resistor in a circuit?",
+    choices:["Store electrical energy for later use","Limit / control the flow of electric current","Convert AC power to DC power","Amplify a weak signal"],
+    correct:1,
+    explain:"Resistors resist current flow, converting some electrical energy into heat — that's how they control current." },
+  { q:"A resistor has the bands Yellow, Violet, Red, Gold. What is its resistance?",
+    choices:["47 Ω ±5%","470 Ω ±5%","4.7 kΩ ±5%","47 kΩ ±5%"],
+    correct:2,
+    explain:"Yellow=4, Violet=7 → 47; Red = ×100 → 4,700 Ω = 4.7 kΩ. Gold = ±5% tolerance." },
+  { q:"What does the tolerance band (like gold or silver) tell you?",
+    choices:["The exact resistance value","How much the actual resistance might vary from the printed value","The maximum voltage the resistor can handle","Which end of the resistor to start reading from"],
+    correct:1,
+    explain:"Tolerance describes manufacturing precision — gold means the real value is within ±5% of the calculated value." },
+  { q:"Why do LEDs almost always need a resistor connected in series with them?",
+    choices:["To make the LED brighter","To store energy for the LED to use later","To limit the current so the LED doesn't burn out","To change the color of the LED"],
+    correct:2,
+    explain:"LEDs have very low internal resistance — without a current-limiting resistor, too much current flows and destroys the LED almost instantly." },
+  { q:"4.7 kΩ is equal to how many ohms?",
+    choices:["47 Ω","470 Ω","4,700 Ω","47,000 Ω"],
+    correct:2,
+    explain:"\"k\" (kilo) means ×1,000, so 4.7 kΩ = 4.7 × 1,000 = 4,700 Ω." }
+];
+var QUIZ_CAPACITORS = [
+  { q:"What does a capacitor do in a circuit?",
+    choices:["Permanently blocks all electric current","Stores and releases electrical energy","Converts electrical energy into light","Boosts the voltage of a battery"],
+    correct:1,
+    explain:"A capacitor stores charge on two plates and can release it quickly when needed." },
+  { q:"A ceramic capacitor is marked \"223\". What value is that?",
+    choices:["2.23 µF","0.223 µF","0.022 µF","223 µF"],
+    correct:2,
+    explain:"22 (digits) × 10³ (multiplier) = 22,000 pF = 22 nF = 0.022 µF." },
+  { q:"What is the key difference between a ceramic and an electrolytic capacitor?",
+    choices:["Ceramic capacitors are polarized; electrolytic capacitors are not","Electrolytic capacitors are polarized and must be inserted the correct way; ceramic capacitors are not","Ceramic capacitors only work with AC power","There is no real difference, just the material used"],
+    correct:1,
+    explain:"Electrolytic capacitors have a + and − lead and can be damaged if reversed; ceramic capacitors are non-polarized." },
+  { q:"What can happen if you install an electrolytic capacitor backwards in a circuit?",
+    choices:["Nothing, polarity doesn't matter for capacitors","It will simply store less energy","It can be damaged, leak, or even fail with a pop or vent","It will convert into a resistor"],
+    correct:2,
+    explain:"Reversing polarity on an electrolytic capacitor can cause internal damage — always match + and − correctly." },
+  { q:"How many nanofarads (nF) are in 1 microfarad (µF)?",
+    choices:["10","100","1,000","1,000,000"],
+    correct:2,
+    explain:"1 µF = 1,000 nF = 1,000,000 pF." }
+];
+
+// ============================================================================
+// DATA: lessons (add more lesson objects here to extend the app)
+// ============================================================================
+var LESSONS = [
+  {
+    id:"resistors", title:"Lesson 1: Resistors",
+    summary:"Resistors are the most common component in any circuit. Learn what a resistor does, how to read its color-code bands, and how to calculate the right resistor for an LED.",
+    componentIds:["resistor","led"],
+    tools:["resistor-trainer","led-calculator"],
+    quiz: QUIZ_RESISTORS
+  },
+  {
+    id:"capacitors", title:"Lesson 2: Capacitors",
+    summary:"Capacitors store and release electrical energy. Compare two common types and learn to decode a ceramic capacitor's 3-digit value marking.",
+    componentIds:["cap_ceramic","cap_electrolytic"],
+    tools:["capacitor-reader"],
+    quiz: QUIZ_CAPACITORS
+  }
+];
+function getLesson(id){
+  for (var i=0;i<LESSONS.length;i++){ if (LESSONS[i].id===id) return LESSONS[i]; }
+  return null;
+}
+
+// ============================================================================
+// RENDER: component card
+// ============================================================================
+function renderComponentCard(componentId, openByDefault){
+  var c = COMPONENTS[componentId];
+  if (!c) return "";
+  var schematicRow = c.schematic
+    ? '<div class="schematic-row">' + c.schematic + '<span>Schematic symbol</span></div>'
+    : "";
+  var caveat = c.caveat ? '<p class="diagram-caveat">'+escapeHtml(c.caveat)+'</p>' : "";
+  return ''
+    + '<details class="component-card"'+(openByDefault?' open':'')+' id="comp-'+c.id+'">'
+    + '<summary aria-label="'+escapeHtml(c.name)+' — expand for details">'
+    +   '<span class="ctitle"><h3>'+escapeHtml(c.name)+'</h3><small>'+escapeHtml(c.category)+'</small></span>'
+    +   '<svg class="disclosure-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="6,9 12,15 18,9"/></svg>'
+    + '</summary>'
+    + '<div class="component-diagram-box">'+c.diagram()+'</div>'
+    + '<div class="component-body">'
+    +   caveat
+    +   '<h4>What it does</h4><p>'+escapeHtml(c.description)+'</p>'
+    +   '<h4>How to read it</h4><p>'+escapeHtml(c.howToRead)+'</p>'
+    +   schematicRow
+    +   '<h4>Real example</h4><p>'+escapeHtml(c.example)+'</p>'
+    +   '<span class="pill">Unit: '+escapeHtml(c.unit)+'</span>'
+    + '</div>'
+    + '</details>';
+}
+
+// ============================================================================
+// WIDGET: Resistor Color-Code Trainer
+// ============================================================================
+var ResistorTrainer = (function(){
+  var state = {
+    mode:"explore", // explore | quiz
+    bands:["yellow","violet","red","gold"], // explore mode current selection
+    quizBands:[null,null,null,null],
+    target:null,
+    quizScore:0, quizAttempted:0,
+    lastCheck:null
+  };
+
+  function valueFromNames(names){
+    var c0=colorByName(names[0]), c1=colorByName(names[1]), c2=colorByName(names[2]), c3=colorByName(names[3]);
+    if (!c0||!c1||!c2||c0.digit===null||c1.digit===null) return null;
+    var significant = c0.digit*10 + c1.digit;
+    var ohms = significant * c2.mult;
+    var tol = c3 ? c3.tol : null;
+    return { ohms:ohms, tol:tol, breakdown:
+      c0.digit+' ('+c0.name+') '+c1.digit+' ('+c1.name+') = '+significant+',  ×'+trimNum(c2.mult)+' ('+c2.name+') = '+trimNum(ohms)+' Ω'
+      + (tol!==null ? ',  tolerance ±'+tol+'% ('+c3.name+')' : '')
+    };
+  }
+
+  function swatchRow(groupName, colorList, selectedName, disabled){
+    var html = '<div class="color-swatch-row" role="group" aria-label="'+escapeHtml(groupName)+' color choices">';
+    colorList.forEach(function(c){
+      var pressed = c.name === selectedName;
+      html += '<button type="button" class="color-swatch" data-band-group="'+escapeHtml(groupName)+'" data-color="'+c.name+'" aria-pressed="'+pressed+'"'+(disabled?' disabled':'')+'>'
+        + '<span class="swatch-dot" style="background:'+c.hex+'"></span>' + c.name.charAt(0).toUpperCase()+c.name.slice(1)
+        + '</button>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function renderExplore(container){
+    var v = valueFromNames(state.bands);
+    var bandHexes = state.bands.map(function(n){ return colorByName(n).hex; });
+    container.innerHTML = ''
+      + '<div class="component-diagram-box" style="border-radius:var(--radius-md);border:1px solid var(--line-300);">'+svgResistor(bandHexes)+'</div>'
+      + '<div class="readout" aria-live="polite">'
+      +   '<div class="value">'+(v ? formatOhms(v.ohms) + (v.tol!==null?' ±'+v.tol+'%':'') : '—')+'</div>'
+      +   '<div class="breakdown">'+(v ? escapeHtml(v.breakdown) : '')+'</div>'
+      + '</div>'
+      + '<div class="band-group"><span class="band-group-label">Band 1 — 1st digit</span>'+swatchRow("b0", DIGIT_COLORS, state.bands[0])+'</div>'
+      + '<div class="band-group"><span class="band-group-label">Band 2 — 2nd digit</span>'+swatchRow("b1", DIGIT_COLORS, state.bands[1])+'</div>'
+      + '<div class="band-group"><span class="band-group-label">Band 3 — Multiplier</span>'+swatchRow("b2", MULT_COLORS, state.bands[2])+'</div>'
+      + '<div class="band-group"><span class="band-group-label">Band 4 — Tolerance</span>'+swatchRow("b3", TOL_COLORS, state.bands[3])+'</div>';
+
+    container.querySelectorAll(".color-swatch").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var group = btn.getAttribute("data-band-group");
+        var idx = { b0:0, b1:1, b2:2, b3:3 }[group];
+        state.bands[idx] = btn.getAttribute("data-color");
+        renderExplore(container);
+      });
+    });
+  }
+
+  function newTarget(){
+    var bank = [
+      {d1:1,d2:0,exp:0},{d1:2,d2:2,exp:0},{d1:4,d2:7,exp:0},
+      {d1:1,d2:0,exp:1},{d1:2,d2:2,exp:1},{d1:3,d2:3,exp:1},{d1:4,d2:7,exp:1},{d1:6,d2:8,exp:1},
+      {d1:1,d2:0,exp:2},{d1:2,d2:2,exp:2},{d1:3,d2:3,exp:2},{d1:4,d2:7,exp:2},
+      {d1:1,d2:0,exp:3},{d1:2,d2:2,exp:3},{d1:4,d2:7,exp:3},
+      {d1:1,d2:0,exp:4},{d1:2,d2:2,exp:4},
+      {d1:1,d2:0,exp:5}
+    ];
+    var t = bank[Math.floor(Math.random()*bank.length)];
+    var ohms = (t.d1*10+t.d2) * Math.pow(10, t.exp);
+    state.target = { d1:t.d1, d2:t.d2, exp:t.exp, ohms:ohms, tol:5 };
+    state.quizBands = [null,null,null,null];
+    state.lastCheck = null;
+  }
+
+  function checkQuiz(){
+    var t = state.target;
+    var c0 = colorByName(state.quizBands[0]);
+    var c1 = colorByName(state.quizBands[1]);
+    var c2 = colorByName(state.quizBands[2]);
+    var c3 = colorByName(state.quizBands[3]);
+    var okD1 = c0 && c0.digit === t.d1;
+    var okD2 = c1 && c1.digit === t.d2;
+    var expectedMultColor = multExponentColorName(t.exp);
+    var okMult = c2 && c2.name === expectedMultColor;
+    var okTol = c3 && c3.name === "gold";
+    var allOk = okD1 && okD2 && okMult && okTol;
+    state.quizAttempted++;
+    if (allOk) state.quizScore++;
+    state.lastCheck = { okD1:okD1, okD2:okD2, okMult:okMult, okTol:okTol, allOk:allOk };
+  }
+
+  function renderQuizMode(container){
+    if (!state.target) newTarget();
+    var t = state.target;
+    var v = valueFromNames(state.quizBands);
+    var bandHexes = state.quizBands.map(function(n){ var c = colorByName(n); return c ? c.hex : "#e5e0cf"; });
+
+    var feedback = "";
+    if (state.lastCheck){
+      var lc = state.lastCheck;
+      feedback = '<div class="feedback-box '+(lc.allOk?'correct':'incorrect')+'" role="status">'
+        + '<p>'+(lc.allOk ? "Correct! That's exactly " + formatOhms(t.ohms) + " ±5%." : "Not quite yet — check the bands marked ✗ below.")+'</p>'
+        + '<div class="band-check-list">'
+        +   '<span>Digit 1 '+(lc.okD1?"✓":"✗")+'</span>'
+        +   '<span>Digit 2 '+(lc.okD2?"✓":"✗")+'</span>'
+        +   '<span>Multiplier '+(lc.okMult?"✓":"✗")+'</span>'
+        +   '<span>Tolerance '+(lc.okTol?"✓":"✗")+'</span>'
+        + '</div>'
+        + '</div>';
+    }
+
+    container.innerHTML = ''
+      + '<div class="readout"><div class="breakdown" style="font-size:.95rem;">Build a resistor that reads</div><div class="value">'+formatOhms(t.ohms)+' ±5%</div></div>'
+      + '<div class="component-diagram-box" style="border-radius:var(--radius-md);border:1px solid var(--line-300);">'+svgResistor(bandHexes)+'</div>'
+      + (v ? '<p style="text-align:center;font-size:.85rem;color:var(--ink-500);">Your current build: '+escapeHtml(formatOhms(v.ohms))+(v.tol!==null?' ±'+v.tol+'%':'')+'</p>' : '')
+      + feedback
+      + '<div class="band-group"><span class="band-group-label">Band 1 — 1st digit</span>'+swatchRow("q0", DIGIT_COLORS, state.quizBands[0])+'</div>'
+      + '<div class="band-group"><span class="band-group-label">Band 2 — 2nd digit</span>'+swatchRow("q1", DIGIT_COLORS, state.quizBands[1])+'</div>'
+      + '<div class="band-group"><span class="band-group-label">Band 3 — Multiplier</span>'+swatchRow("q2", MULT_COLORS, state.quizBands[2])+'</div>'
+      + '<div class="band-group"><span class="band-group-label">Band 4 — Tolerance</span>'+swatchRow("q3", TOL_COLORS, state.quizBands[3])+'</div>'
+      + '<div class="card-row">'
+      +   '<button type="button" class="btn btn-primary" id="checkAnswerBtn">Check My Answer</button>'
+      +   '<button type="button" class="btn btn-secondary" id="newTargetBtn">New Target</button>'
+      +   '<span class="pill">Score: '+state.quizScore+' / '+state.quizAttempted+'</span>'
+      + '</div>';
+
+    container.querySelectorAll(".color-swatch").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var group = btn.getAttribute("data-band-group");
+        var idx = { q0:0, q1:1, q2:2, q3:3 }[group];
+        state.quizBands[idx] = btn.getAttribute("data-color");
+        renderQuizMode(container);
+      });
+    });
+    container.querySelector("#checkAnswerBtn").addEventListener("click", function(){
+      checkQuiz();
+      renderQuizMode(container);
+    });
+    container.querySelector("#newTargetBtn").addEventListener("click", function(){
+      newTarget();
+      renderQuizMode(container);
+    });
+  }
+
+  function mount(root){
+    root.innerHTML = ''
+      + '<h3>Resistor Color-Code Trainer</h3>'
+      + '<p>Select colors for each band and watch the resistance value update live — or switch to Quiz Mode to practice building a target value from scratch.</p>'
+      + '<div class="tool-tabs" role="tablist">'
+      +   '<button type="button" class="tool-tab" id="tabExplore" role="tab" aria-selected="true">Explore Mode</button>'
+      +   '<button type="button" class="tool-tab" id="tabQuiz" role="tab" aria-selected="false">Quiz Mode</button>'
+      + '</div>'
+      + '<div id="resistorBody"></div>';
+    var body = root.querySelector("#resistorBody");
+    var tabExplore = root.querySelector("#tabExplore");
+    var tabQuiz = root.querySelector("#tabQuiz");
+    function showExplore(){
+      state.mode = "explore";
+      tabExplore.setAttribute("aria-selected","true");
+      tabQuiz.setAttribute("aria-selected","false");
+      renderExplore(body);
+    }
+    function showQuiz(){
+      state.mode = "quiz";
+      tabExplore.setAttribute("aria-selected","false");
+      tabQuiz.setAttribute("aria-selected","true");
+      renderQuizMode(body);
+    }
+    tabExplore.addEventListener("click", showExplore);
+    tabQuiz.addEventListener("click", showQuiz);
+    showExplore();
+  }
+
+  return { mount:mount };
+})();
+
+// ============================================================================
+// WIDGET: Capacitor Code Reader
+// ============================================================================
+var CapacitorReader = (function(){
+  var state = { mode:"decode", decodeCode:"104", practiceCode:null, practiceScore:0, practiceAttempted:0, practiceChoices:null, answered:false, pickedIndex:null };
+
+  function decode(code){
+    var digits = code.split("").map(Number);
+    var significant = digits[0]*10 + digits[1];
+    var pf = significant * Math.pow(10, digits[2]);
+    return {
+      significant:significant, exp:digits[2], pf:pf, nf:pf/1000, uf:pf/1e6,
+      text: digits[0]+' '+digits[1]+' × 10^'+digits[2]+' = '+significant+' × '+trimNum(Math.pow(10,digits[2]))+' = '+trimNum(pf)+' pF = '+trimNum(pf/1000)+' nF = '+trimNum(pf/1e6)+' µF'
+    };
+  }
+
+  function renderDecode(container){
+    var valid = /^[0-9]{3}$/.test(state.decodeCode);
+    var d = valid ? decode(state.decodeCode) : null;
+    container.innerHTML = ''
+      + '<div class="component-diagram-box" style="border-radius:var(--radius-md);border:1px solid var(--line-300);">'+svgCapacitorCeramic(valid?state.decodeCode:"???")+'</div>'
+      + '<div class="field-row"><div class="field">'
+      +   '<label for="capCodeInput">Capacitor code (3 digits)</label>'
+      +   '<input type="text" id="capCodeInput" inputmode="numeric" maxlength="3" value="'+escapeHtml(state.decodeCode)+'" placeholder="e.g. 104">'
+      +   '<span class="hint">Type any 3-digit ceramic capacitor code to decode it.</span>'
+      + '</div></div>'
+      + '<div class="readout" aria-live="polite">'
+      +   '<div class="value">'+(d ? formatFaradsFromPF(d.pf) : "Type 3 digits") +'</div>'
+      +   '<div class="breakdown">'+(d ? escapeHtml(d.text) : "")+'</div>'
+      + '</div>';
+    var input = container.querySelector("#capCodeInput");
+    input.addEventListener("input", function(){
+      state.decodeCode = input.value.replace(/[^0-9]/g,"").slice(0,3);
+      var caret = state.decodeCode.length;
+      renderDecode(container);
+      var el = container.querySelector("#capCodeInput");
+      el.focus(); el.setSelectionRange(caret, caret);
+    });
+  }
+
+  function buildChoices(correctUF){
+    var set = [correctUF];
+    var variants = [correctUF*10, correctUF/10, correctUF*100, correctUF/100, correctUF*2, correctUF/2, correctUF*5];
+    for (var i=0;i<variants.length && set.length<4;i++){
+      var v = variants[i];
+      if (v>0 && set.indexOf(v)===-1) set.push(v);
+    }
+    var mult = 1.3;
+    while (set.length<4){
+      var extra = correctUF*mult;
+      if (set.indexOf(extra)===-1) set.push(extra);
+      mult += 0.6;
+    }
+    return shuffle(set);
+  }
+
+  function newPracticeQuestion(){
+    var bank = ["101","102","103","104","105","151","152","221","222","223","224","331","332","333","471","472","473","474","681","682"];
+    state.practiceCode = bank[Math.floor(Math.random()*bank.length)];
+    var d = decode(state.practiceCode);
+    state.practiceChoices = buildChoices(d.uf);
+    state.answered = false;
+    state.pickedIndex = null;
+  }
+
+  function renderPractice(container){
+    if (!state.practiceCode) newPracticeQuestion();
+    var d = decode(state.practiceCode);
+    var optsHtml = "";
+    state.practiceChoices.forEach(function(opt, i){
+      var isCorrect = Math.abs(opt - d.uf) < 1e-9;
+      var cls = "mc-option";
+      if (state.answered && isCorrect) cls += " opt-correct";
+      if (state.answered && i===state.pickedIndex && !isCorrect) cls += " opt-incorrect";
+      var checked = i===state.pickedIndex ? " checked" : "";
+      optsHtml += '<label class="'+cls+'"><input type="radio" name="capPractice" value="'+i+'"'+checked+' '+(state.answered?'disabled':'')+'> '+trimNum(opt)+' µF</label>';
+    });
+    container.innerHTML = ''
+      + '<div class="component-diagram-box" style="border-radius:var(--radius-md);border:1px solid var(--line-300);">'+svgCapacitorCeramic(state.practiceCode)+'</div>'
+      + '<p style="text-align:center;font-weight:700;">What value is this capacitor, in µF?</p>'
+      + '<div class="mc-options">'+optsHtml+'</div>'
+      + (state.answered ? '<div class="feedback-box '+(state.lastCorrect?"correct":"incorrect")+'"><p>'+(state.lastCorrect?"Correct! ":"Not quite. ")+escapeHtml(d.text)+'</p></div>' : '')
+      + '<div class="card-row">'
+      +   '<button type="button" class="btn btn-primary" id="capCheckBtn" '+(state.answered?'disabled':'')+'>Check Answer</button>'
+      +   '<button type="button" class="btn btn-secondary" id="capNextBtn">New Code</button>'
+      +   '<span class="pill">Score: '+state.practiceScore+' / '+state.practiceAttempted+'</span>'
+      + '</div>';
+
+    container.querySelector("#capCheckBtn").addEventListener("click", function(){
+      var picked = container.querySelector('input[name="capPractice"]:checked');
+      if (!picked) return;
+      var idx = Number(picked.value);
+      var isCorrect = Math.abs(state.practiceChoices[idx]-d.uf) < 1e-9;
+      state.answered = true;
+      state.pickedIndex = idx;
+      state.lastCorrect = isCorrect;
+      state.practiceAttempted++;
+      if (isCorrect) state.practiceScore++;
+      renderPractice(container);
+    });
+    container.querySelector("#capNextBtn").addEventListener("click", function(){
+      newPracticeQuestion();
+      renderPractice(container);
+    });
+  }
+
+  function mount(root){
+    root.innerHTML = ''
+      + '<h3>Capacitor Code Reader</h3>'
+      + '<p>Ceramic capacitors are marked with a 3-digit code, not a plain number. Decode any code yourself, or practice reading random ones.</p>'
+      + '<div class="tool-tabs" role="tablist">'
+      +   '<button type="button" class="tool-tab" id="capTabDecode" role="tab" aria-selected="true">Decoder</button>'
+      +   '<button type="button" class="tool-tab" id="capTabPractice" role="tab" aria-selected="false">Practice</button>'
+      + '</div>'
+      + '<div id="capBody"></div>';
+    var body = root.querySelector("#capBody");
+    var tabD = root.querySelector("#capTabDecode");
+    var tabP = root.querySelector("#capTabPractice");
+    function showDecode(){ tabD.setAttribute("aria-selected","true"); tabP.setAttribute("aria-selected","false"); renderDecode(body); }
+    function showPractice(){ tabD.setAttribute("aria-selected","false"); tabP.setAttribute("aria-selected","true"); renderPractice(body); }
+    tabD.addEventListener("click", showDecode);
+    tabP.addEventListener("click", showPractice);
+    showDecode();
+  }
+
+  return { mount:mount };
+})();
+
+// ============================================================================
+// WIDGET: LED Resistor Sizing Calculator
+// ============================================================================
+var LEDCalculator = (function(){
+  var LED_PRESETS = [
+    { label:"Red (~2.0V)", vf:2.0, color:"#e0402d" },
+    { label:"Orange (~2.0V)", vf:2.0, color:"#e07b28" },
+    { label:"Yellow (~2.1V)", vf:2.1, color:"#e8c22e" },
+    { label:"Green (~2.2V)", vf:2.2, color:"#2e8b4f" },
+    { label:"Blue (~3.2V)", vf:3.2, color:"#2f5fa8" },
+    { label:"White (~3.2V)", vf:3.2, color:"#e9e9e9" },
+    { label:"Custom…", vf:null, color:"#e0402d" }
+  ];
+  var state = { vs:5, vf:2.0, ma:20, presetIdx:0 };
+
+  function compute(){
+    var out = { error:null };
+    if (!(state.vs > 0) || !(state.vf > 0) || !(state.ma > 0)){
+      out.error = "Enter positive numbers for all three fields.";
+      return out;
+    }
+    if (state.vs <= state.vf){
+      out.error = "Supply voltage must be higher than the LED's forward voltage, or current can't flow the right direction and the LED won't light.";
+      return out;
+    }
+    var iAmps = state.ma/1000;
+    var rExact = (state.vs - state.vf) / iAmps;
+    var rStd = nearestE12AtOrAbove(rExact);
+    var iActual = (state.vs - state.vf) / rStd;
+    var power = iActual * iActual * rStd;
+    out.rExact = rExact; out.rStd = rStd; out.iActual = iActual*1000; out.power = power;
+    return out;
+  }
+
+  function render(container){
+    var r = compute();
+    var preset = LED_PRESETS[state.presetIdx];
+    var ledColor = preset.vf !== null ? preset.color : "#e0402d";
+    var presetOptions = LED_PRESETS.map(function(p,i){
+      return '<option value="'+i+'"'+(i===state.presetIdx?' selected':'')+'>'+escapeHtml(p.label)+'</option>';
+    }).join("");
+
+    var resultHtml;
+    if (r.error){
+      resultHtml = '<div class="feedback-box incorrect" role="status"><p>'+escapeHtml(r.error)+'</p></div>';
+    } else {
+      resultHtml = ''
+        + '<div class="readout" aria-live="polite">'
+        +   '<div class="value">'+trimNum(r.rStd)+' Ω</div>'
+        +   '<div class="breakdown">nearest standard resistor (exact calc: '+trimNum(r.rExact)+' Ω)</div>'
+        + '</div>'
+        + '<div class="note-box">'
+        +   '<strong>Formula:</strong> R = (V<sub>supply</sub> − V<sub>LED</sub>) ÷ I<br>'
+        +   'R = ('+trimNum(state.vs)+'V − '+trimNum(state.vf)+'V) ÷ '+trimNum(state.ma/1000)+'A = '+trimNum(r.rExact)+' Ω, rounded up to the standard value '+trimNum(r.rStd)+' Ω.<br>'
+        +   'With that resistor, actual current ≈ <strong>'+trimNum(r.iActual)+' mA</strong>, power dissipation ≈ '+trimNum(r.power)+' W'
+        +   (r.power > 0.25 ? ' — exceeds a typical 1/4W resistor, choose a higher-wattage part.' : ' (fine for a standard 1/4W resistor).')
+        + '</div>';
+    }
+
+    container.innerHTML = ''
+      + '<div class="field-row">'
+      +   '<div class="field"><label for="ledPreset">LED color</label>'
+      +     '<select id="ledPreset">'+presetOptions+'</select>'
+      +     '<span class="hint">Picks a typical forward voltage — override it below.</span></div>'
+      +   '<div class="field"><label for="vsInput">Supply voltage (V)</label>'
+      +     '<input type="number" id="vsInput" step="0.1" min="0" value="'+state.vs+'"></div>'
+      +   '<div class="field"><label for="vfInput">LED forward voltage (V)</label>'
+      +     '<input type="number" id="vfInput" step="0.1" min="0" value="'+state.vf+'"></div>'
+      +   '<div class="field"><label for="maInput">Desired current (mA)</label>'
+      +     '<input type="number" id="maInput" step="1" min="0" value="'+state.ma+'"></div>'
+      + '</div>'
+      + '<div class="component-diagram-box" style="border-radius:var(--radius-md);border:1px solid var(--line-300);">'+svgLED(ledColor)+'</div>'
+      + resultHtml;
+
+    container.querySelector("#ledPreset").addEventListener("change", function(e){
+      state.presetIdx = Number(e.target.value);
+      var p = LED_PRESETS[state.presetIdx];
+      if (p.vf !== null) state.vf = p.vf;
+      render(container);
+    });
+    container.querySelector("#vsInput").addEventListener("input", function(e){ state.vs = parseFloat(e.target.value)||0; render(container); });
+    container.querySelector("#vfInput").addEventListener("input", function(e){ state.vf = parseFloat(e.target.value)||0; render(container); });
+    container.querySelector("#maInput").addEventListener("input", function(e){ state.ma = parseFloat(e.target.value)||0; render(container); });
+
+    // preserve focus across re-render for the field the user is typing in
+  }
+
+  function mount(root){
+    root.innerHTML = ''
+      + '<h3>LED Resistor Sizing Calculator</h3>'
+      + '<p>A resistor in series with an LED forms a simple voltage divider: the resistor "uses up" the extra voltage and limits current to a safe level. Enter your circuit values below.</p>'
+      + '<div id="ledCalcBody"></div>';
+    render(root.querySelector("#ledCalcBody"));
+  }
+
+  return { mount:mount };
+})();
+
+// ============================================================================
+// WIDGET: Quiz (generic, data-driven)
+// ============================================================================
+function mountQuiz(root, lessonId, questions){
+  var answers = new Array(questions.length).fill(null);
+  var submitted = false;
+
+  function render(){
+    var qHtml = questions.map(function(q, qi){
+      var choicesHtml = q.choices.map(function(choice, ci){
+        var checked = answers[qi]===ci ? " checked" : "";
+        var isCorrect = ci === q.correct;
+        var cls = "mc-option";
+        if (submitted && isCorrect) cls += " opt-correct";
+        if (submitted && answers[qi]===ci && !isCorrect) cls += " opt-incorrect";
+        return '<label class="'+cls+'"><input type="radio" name="quiz_'+lessonId+'_'+qi+'" value="'+ci+'"'+checked+(submitted?' disabled':'')+'> '+escapeHtml(choice)+'</label>';
+      }).join("");
+      var explain = submitted ? '<div class="quiz-explain">'+escapeHtml(q.explain)+'</div>' : "";
+      return '<div class="quiz-question"><fieldset><legend>'+(qi+1)+'. '+escapeHtml(q.q)+'</legend>'
+        + '<div class="mc-options">'+choicesHtml+'</div>'+explain+'</fieldset></div>';
+    }).join("");
+
+    var summaryHtml = "";
+    if (submitted){
+      var score = 0;
+      questions.forEach(function(q,qi){ if (answers[qi]===q.correct) score++; });
+      summaryHtml = '<div class="quiz-summary" aria-live="polite">'
+        + '<div class="score-big">'+score+' / '+questions.length+'</div>'
+        + '<p>'+(score===questions.length ? "Perfect score!" : "Nice work — review the explanations above, or try again.")+'</p>'
+        + '<button type="button" class="btn btn-secondary" id="quizRetakeBtn">Try Again</button>'
+        + '</div>';
+    }
+
+    root.innerHTML = '<h3>Lesson Quiz</h3>' + qHtml
+      + (submitted ? summaryHtml : '<button type="button" class="btn btn-primary" id="quizSubmitBtn">Submit Quiz</button>');
+
+    root.querySelectorAll('input[type="radio"]').forEach(function(input){
+      input.addEventListener("change", function(){
+        var name = input.name;
+        var qi = Number(name.split("_").pop());
+        answers[qi] = Number(input.value);
+      });
+    });
+
+    var submitBtn = root.querySelector("#quizSubmitBtn");
+    if (submitBtn){
+      submitBtn.addEventListener("click", function(){
+        var allAnswered = answers.every(function(a){ return a!==null; });
+        if (!allAnswered){
+          if (!root.querySelector(".quiz-warning")){
+            var warn = document.createElement("div");
+            warn.className = "feedback-box incorrect quiz-warning";
+            warn.setAttribute("role","status");
+            warn.innerHTML = "<p>Please answer every question before submitting.</p>";
+            root.insertBefore(warn, submitBtn);
+          }
+          return;
+        }
+        submitted = true;
+        var score = 0;
+        questions.forEach(function(q,qi){ if (answers[qi]===q.correct) score++; });
+        recordQuizResult(lessonId, score, questions.length);
+        render();
+      });
+    }
+    var retakeBtn = root.querySelector("#quizRetakeBtn");
+    if (retakeBtn){
+      retakeBtn.addEventListener("click", function(){
+        answers = new Array(questions.length).fill(null);
+        submitted = false;
+        render();
+      });
+    }
+  }
+  render();
+}
+
+// ============================================================================
+// TOOL REGISTRY (id -> {title, mount})
+// ============================================================================
+var TOOL_REGISTRY = {
+  "resistor-trainer": { title:"Resistor Color-Code Trainer", mount:ResistorTrainer.mount },
+  "capacitor-reader": { title:"Capacitor Code Reader", mount:CapacitorReader.mount },
+  "led-calculator": { title:"LED Resistor Calculator", mount:LEDCalculator.mount }
+};
+
+// ============================================================================
+// VIEWS
+// ============================================================================
+function progressSummaryHtml(){
+  var progress = loadProgress();
+  var rows = LESSONS.map(function(lesson){
+    var rec = progress.lessons[lesson.id];
+    var status = "Not started";
+    var pct = 0;
+    if (rec){
+      pct = Math.round((rec.bestScore/rec.total)*100);
+      status = "Best score: "+rec.bestScore+" / "+rec.total+" ("+pct+"%)";
+    }
+    return '<div class="progress-row">'
+      + '<div><div class="progress-name">'+escapeHtml(lesson.title)+'</div><div class="progress-status">'+escapeHtml(status)+'</div></div>'
+      + '<div class="meter"><span style="width:'+pct+'%"></span></div>'
+      + '</div>';
+  }).join("");
+  return '<div class="progress-panel">'
+    + '<div class="section-head"><h2 style="margin:0;">Your Progress</h2><button type="button" class="btn btn-danger-ghost" id="resetProgressBtn">Reset My Progress</button></div>'
+    + rows
+    + '</div>';
+}
+
+function viewHome(){
+  var html = ''
+    + '<div class="hero">'
+    +   '<h1>Welcome to MicroLab</h1>'
+    +   '<p>MicroLab is a hands-on electronics lab for your browser. Learn to read real components, decode their markings, and calculate real values — the same skills you\'ll use at an actual workbench.</p>'
+    +   '<div class="hero-actions">'
+    +     '<a class="btn btn-primary" href="#lesson-resistors">Start Lesson 1: Resistors</a>'
+    +     '<a class="btn btn-secondary" href="#library" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.5);">Browse Component Library</a>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="quick-links">'
+    +   '<a class="quick-link-card" href="#library"><h3>Component Library</h3><p>8 reference cards: resistors, capacitors, LEDs, diodes, transistors, breadboards, and ESP32 pinout basics.</p></a>'
+    +   '<a class="quick-link-card" href="#tools"><h3>Interactive Tools</h3><p>Resistor trainer, capacitor decoder, and an LED resistor calculator — usable anytime, outside a lesson.</p></a>'
+    +   '<a class="quick-link-card" href="#lesson-capacitors"><h3>Lesson 2: Capacitors</h3><p>Compare ceramic and electrolytic capacitors and decode 3-digit value codes.</p></a>'
+    + '</div>'
+    + '<div class="section">' + progressSummaryHtml() + '</div>';
+  return html;
+}
+
+function viewLibrary(){
+  var cards = COMPONENT_ORDER.map(function(id){ return renderComponentCard(id, false); }).join("");
+  return ''
+    + '<h1>Component Library</h1>'
+    + '<p>Every component used across MicroLab lessons, in one reference set. Click a card to expand it.</p>'
+    + '<div class="component-grid">' + cards + '</div>';
+}
+
+function viewLesson(lessonId){
+  var lesson = getLesson(lessonId);
+  if (!lesson) return '<h1>Lesson not found</h1><p><a href="#home">Return home</a></p>';
+  var idx = LESSONS.indexOf(lesson);
+  var cardsHtml = lesson.componentIds.map(function(cid){ return renderComponentCard(cid, true); }).join("");
+  var toolSections = lesson.tools.map(function(toolId, i){
+    var tool = TOOL_REGISTRY[toolId];
+    return '<div class="lesson-section-title"><span class="step-marker">'+(i+1)+'</span><h2 style="margin:0;">'+escapeHtml(tool.title)+'</h2></div>'
+      + '<div class="tool-widget" id="toolmount-'+toolId+'-'+lesson.id+'"></div>';
+  }).join("");
+
+  var html = ''
+    + '<div class="lesson-header">'
+    +   '<span class="pill">Lesson '+(idx+1)+' of '+LESSONS.length+'</span>'
+    +   '<h1>'+escapeHtml(lesson.title)+'</h1>'
+    +   '<p>'+escapeHtml(lesson.summary)+'</p>'
+    + '</div>'
+    + '<div class="section"><h2>Components</h2><div class="component-grid">'+cardsHtml+'</div></div>'
+    + '<div class="section lesson-tools-wrap">' + toolSections + '</div>'
+    + '<div class="section" id="quizmount-'+lesson.id+'"></div>';
+  return html;
+}
+
+function viewTools(){
+  var html = ''
+    + '<h1>Tools</h1>'
+    + '<p>The same interactive tools used throughout the lessons — jump here anytime for quick reference or extra practice.</p>'
+    + '<div class="jump-nav">'
+    +   '<button type="button" data-scroll-to="tool-resistor-trainer">Resistor Trainer</button>'
+    +   '<button type="button" data-scroll-to="tool-capacitor-reader">Capacitor Reader</button>'
+    +   '<button type="button" data-scroll-to="tool-led-calculator">LED Calculator</button>'
+    + '</div>'
+    + '<div class="section" id="tool-resistor-trainer"><div class="tool-widget" id="toolmount-resistor-trainer-standalone"></div></div>'
+    + '<div class="section" id="tool-capacitor-reader"><div class="tool-widget" id="toolmount-capacitor-reader-standalone"></div></div>'
+    + '<div class="section" id="tool-led-calculator"><div class="tool-widget" id="toolmount-led-calculator-standalone"></div></div>';
+  return html;
+}
+
+// ============================================================================
+// ROUTER
+// ============================================================================
+var viewRoot = document.getElementById("viewRoot");
+var mainContent = document.getElementById("main-content");
+
+function router(){
+  var hash = (location.hash || "#home").replace("#","");
+  if (hash === "main-content"){
+    mainContent.focus({ preventScroll:false });
+    return;
+  }
+  closeDrawer();
+
+  if (hash === "home"){
+    viewRoot.innerHTML = viewHome();
+    var resetBtn = viewRoot.querySelector("#resetProgressBtn");
+    if (resetBtn) resetBtn.addEventListener("click", function(){
+      if (confirm("Reset all saved lesson progress on this device? This can't be undone.")) resetProgress();
+    });
+  } else if (hash === "library"){
+    viewRoot.innerHTML = viewLibrary();
+  } else if (hash === "tools"){
+    viewRoot.innerHTML = viewTools();
+    ResistorTrainer.mount(document.getElementById("toolmount-resistor-trainer-standalone"));
+    CapacitorReader.mount(document.getElementById("toolmount-capacitor-reader-standalone"));
+    LEDCalculator.mount(document.getElementById("toolmount-led-calculator-standalone"));
+    viewRoot.querySelectorAll("[data-scroll-to]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var target = document.getElementById(btn.getAttribute("data-scroll-to"));
+        if (target) target.scrollIntoView({ behavior:"smooth", block:"start" });
+      });
+    });
+  } else if (hash.indexOf("lesson-") === 0){
+    var lessonId = hash.replace("lesson-","");
+    var lesson = getLesson(lessonId);
+    viewRoot.innerHTML = viewLesson(lessonId);
+    if (lesson){
+      lesson.tools.forEach(function(toolId){
+        var el = document.getElementById("toolmount-"+toolId+"-"+lesson.id);
+        if (el && TOOL_REGISTRY[toolId]) TOOL_REGISTRY[toolId].mount(el);
+      });
+      mountQuiz(document.getElementById("quizmount-"+lesson.id), lesson.id, lesson.quiz);
+    }
+  } else {
+    viewRoot.innerHTML = viewHome();
+  }
+
+  updateActiveNav(hash);
+  mainContent.focus({ preventScroll:false });
+  window.scrollTo(0,0);
+}
+
+function updateActiveNav(hash){
+  document.querySelectorAll("[data-route-link], #lessonNavList a").forEach(function(a){
+    a.classList.remove("active");
+  });
+  document.querySelectorAll('[data-route-link="'+hash.split("-")[0]+'"]').forEach(function(a){ a.classList.add("active"); });
+  if (hash.indexOf("lesson-")===0){
+    var link = document.querySelector('#lessonNavList a[href="#'+hash+'"]');
+    if (link) link.classList.add("active");
+  }
+}
+
+function renderSidebarNav(){
+  var list = document.getElementById("lessonNavList");
+  var progress = loadProgress();
+  list.innerHTML = LESSONS.map(function(lesson){
+    var rec = progress.lessons[lesson.id];
+    var badge = rec ? '<span class="nav-badge'+(rec.bestScore===rec.total?' done':'')+'">'+rec.bestScore+'/'+rec.total+'</span>' : "";
+    return '<li><a href="#lesson-'+lesson.id+'" data-route-link="lesson-'+lesson.id+'">'+escapeHtml(lesson.title.replace(/^Lesson \d+: /,""))+badge+'</a></li>';
+  }).join("");
+}
+function updateSidebarBadges(){ renderSidebarNav(); updateActiveNav((location.hash||"#home").replace("#","")); }
+
+// ============================================================================
+// MOBILE DRAWER
+// ============================================================================
+var sidebar = document.getElementById("sidebar");
+var navToggle = document.getElementById("navToggle");
+var navBackdrop = document.getElementById("navBackdrop");
+function openDrawer(){
+  sidebar.classList.add("open");
+  navBackdrop.classList.add("show");
+  navToggle.setAttribute("aria-expanded","true");
+}
+function closeDrawer(){
+  sidebar.classList.remove("open");
+  navBackdrop.classList.remove("show");
+  navToggle.setAttribute("aria-expanded","false");
+}
+navToggle.addEventListener("click", function(){
+  if (sidebar.classList.contains("open")) closeDrawer(); else openDrawer();
+});
+navBackdrop.addEventListener("click", closeDrawer);
+document.addEventListener("keydown", function(e){
+  if (e.key === "Escape" && sidebar.classList.contains("open")) closeDrawer();
+});
+
+// ============================================================================
+// INIT
+// ============================================================================
+renderSidebarNav();
+window.addEventListener("hashchange", router);
+router();
+
+})();
+</script>
+</body>
+</html>

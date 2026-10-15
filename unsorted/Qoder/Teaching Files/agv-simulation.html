@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AGV Warehouse Simulation</title>
+<style>
+  :root { --bg:#10141a; --panel:#1a212b; --line:#2c3644; --text:#dfe6ee; --dim:#8b98a9;
+          --acc:#38bdf8; --ok:#34d399; --warn:#fbbf24; --bad:#f87171; }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--text); font:14px/1.45 "SF Mono",Menlo,Consolas,monospace; padding:16px; }
+  h1 { font-size:18px; margin-bottom:2px; }
+  .sub { color:var(--dim); font-size:12px; margin-bottom:12px; }
+  .layout { display:flex; gap:14px; flex-wrap:wrap; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px; }
+  #mapPanel { flex:2; min-width:560px; }
+  #sidePanel { flex:1; min-width:280px; display:flex; flex-direction:column; gap:12px; }
+  canvas { display:block; width:100%; border-radius:6px; }
+  .controls { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+  button { background:#263140; color:var(--text); border:1px solid var(--line); border-radius:6px;
+           padding:7px 14px; font:inherit; cursor:pointer; }
+  button:hover { background:#31405280; border-color:var(--acc); }
+  button:disabled { opacity:.4; cursor:default; }
+  button.primary { background:var(--acc); color:#04121c; border-color:var(--acc); font-weight:bold; }
+  label { color:var(--dim); font-size:12px; }
+  select,input[type=range] { vertical-align:middle; }
+  .stat { display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid #222b36; }
+  .stat b { color:var(--acc); font-weight:normal; }
+  .status { font-size:16px; font-weight:bold; padding:8px; border-radius:6px; text-align:center;
+            background:#0d1420; border:1px solid var(--line); margin-bottom:8px; }
+  .battbar { height:12px; background:#0d1420; border:1px solid var(--line); border-radius:6px; overflow:hidden; margin:6px 0; }
+  .battfill { height:100%; background:var(--ok); transition:width .3s; }
+  #logWrap { margin-top:14px; max-height:220px; overflow:auto; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th,td { text-align:left; padding:4px 8px; border-bottom:1px solid #222b36; white-space:nowrap; }
+  th { color:var(--dim); position:sticky; top:0; background:var(--panel); }
+  #qrOverlay { position:fixed; inset:0; background:#000a; display:none; align-items:center;
+               justify-content:center; z-index:10; }
+  #qrBox { background:var(--panel); border:1px solid var(--acc); border-radius:10px; padding:24px; text-align:center; }
+  #qrCanvas { background:#fff; border-radius:4px; margin:10px auto; }
+  #decoded { color:var(--ok); font-size:15px; margin-top:8px; min-height:20px; }
+  .legend { display:flex; gap:14px; margin-top:8px; font-size:11px; color:var(--dim); flex-wrap:wrap; }
+  .dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; }
+</style>
+</head>
+<body>
+<h1>AGV Warehouse Simulation</h1>
+<div class="sub">5-stop mission · QR manifest at dock · 5 s dwell per stop · camera obstacle avoidance · 4×AA pack (6.0 V) · low-battery return-to-home</div>
+
+<div class="layout">
+  <div class="panel" id="mapPanel">
+    <canvas id="map" width="900" height="560"></canvas>
+    <div class="legend">
+      <span><span class="dot" style="background:#38bdf8"></span>AGV</span>
+      <span><span class="dot" style="background:#34d399"></span>Stop point</span>
+      <span><span class="dot" style="background:#fbbf24"></span>Home / charge dock</span>
+      <span><span class="dot" style="background:#64748b"></span>Shelves</span>
+      <span><span class="dot" style="background:#d97706"></span>Obstacle (crate)</span>
+      <span><span class="dot" style="background:#f87171"></span>Trail</span>
+    </div>
+    <div class="controls">
+      <button id="scanBtn" class="primary">Scan QR Manifest</button>
+      <button id="pauseBtn" disabled>Pause</button>
+      <button id="resetBtn">Reset</button>
+      <label>Sim speed
+        <select id="speedSel">
+          <option value="1">1×</option><option value="2">2×</option>
+          <option value="4" selected>4×</option><option value="8">8×</option>
+        </select>
+      </label>
+      <label>Battery at start: <span id="battLabel">100%</span>
+        <input type="range" id="battSlider" min="15" max="100" value="100" style="width:110px">
+      </label>
+      <label><input type="checkbox" id="randObs" checked> Random obstacles</label>
+    </div>
+  </div>
+
+  <div id="sidePanel">
+    <div class="panel">
+      <div class="status" id="status">IDLE — scan QR to begin</div>
+      <div class="stat"><span>Next stop</span><b id="tTarget">—</b></div>
+      <div class="stat"><span>Route</span><b id="tRoute">—</b></div>
+      <div class="stat"><span>Dwell countdown</span><b id="tDwell">—</b></div>
+      <div class="stat"><span>Mission clock</span><b id="tClock">0.0 s</b></div>
+    </div>
+    <div class="panel">
+      <div class="stat"><span>Speed</span><b id="tSpeed">0.00 m/s</b></div>
+      <div class="stat"><span>Distance travelled</span><b id="tDist">0.0 m</b></div>
+      <div class="stat"><span>Avg speed (moving)</span><b id="tAvg">—</b></div>
+      <div class="stat"><span>Accel RMS (MPU6050)</span><b id="tRms">0.00 m/s²</b></div>
+      <div class="stat"><span>Shock events</span><b id="tShock">0</b></div>
+      <div class="stat"><span>Camera</span><b id="tCam">—</b></div>
+      <div class="stat"><span>Obstacle avoidances</span><b id="tAvoid">0</b></div>
+    </div>
+    <div class="panel">
+      <div class="stat"><span>Battery voltage</span><b id="tVolt">6.00 V</b></div>
+      <div class="battbar"><div class="battfill" id="battFill" style="width:100%"></div></div>
+      <div class="stat"><span>Current draw</span><b id="tCurr">0.04 A</b></div>
+      <div class="stat"><span>Energy used</span><b id="tWh">0.00 Wh</b></div>
+      <div class="stat"><span>Efficiency</span><b id="tEff">— Wh/m</b></div>
+      <canvas id="chart" width="320" height="110" style="margin-top:8px"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="panel" style="margin-top:14px">
+  <b>Event &amp; leg log</b>
+  <div id="logWrap"><table id="logTable"><thead>
+    <tr><th>t (s)</th><th>Event</th><th>Leg</th><th>Distance</th><th>Time</th><th>Avg spd</th><th>Energy</th></tr>
+  </thead><tbody></tbody></table></div>
+</div>
+
+<div id="qrOverlay"><div id="qrBox">
+  <b>Scanning QR manifest at dock…</b>
+  <canvas id="qrCanvas" width="160" height="160"></canvas>
+  <div id="decoded"></div>
+</div></div>
+
+<script>
+"use strict";
+const W = 900, H = 560, PXM = 42;           // pixels per meter
+const MW = W / PXM, MH = H / PXM;           // world: ~21.4 x 13.3 m
+
+const HOME  = { x: 1.8, y: MH - 1.8, name: "HOME" };
+const STOPS = [
+  { x: 4.5,  y: 2.2,  name: "P1" },
+  { x: 10.5, y: 2.2,  name: "P2" },
+  { x: 16.8, y: 3.5,  name: "P3" },
+  { x: 17.0, y: 10.5, name: "P4" },
+  { x: 8.5,  y: 11.0, name: "P5" },
+];
+const SHELVES = [
+  [6.5, 4.0, 3.0, 5.5], [12.0, 4.0, 3.0, 5.5], [2.0, 4.5, 2.4, 4.0], [16.5, 6.0, 2.2, 2.5]
+].map(([x,y,w,h]) => ({x,y,w,h}));
+
+let OBSTACLES = [];
+function makeObstacles(random) {
+  OBSTACLES = [];
+  if (!random) {
+    OBSTACLES = [
+      { x: 7.5,  y: 2.4, r: 0.55 },
+      { x: 13.9, y: 2.7, r: 0.5  },
+      { x: 14.6, y: 8.8, r: 0.55 },
+      { x: 4.6,  y: 9.2, r: 0.5  },
+    ];
+    return;
+  }
+  const keepAway = [HOME, ...STOPS];
+  let tries = 0;
+  while (OBSTACLES.length < 6 && tries++ < 400) {
+    const o = { x: 1 + Math.random() * (MW - 2), y: 1 + Math.random() * (MH - 2),
+                r: 0.4 + Math.random() * 0.25 };
+    if (keepAway.some(p => dist(p, o) < 1.6)) continue;
+    if (OBSTACLES.some(q => dist(q, o) < q.r + o.r + 1.1)) continue;
+    if (SHELVES.some(s => o.x > s.x - 0.8 && o.x < s.x + s.w + 0.8 &&
+                          o.y > s.y - 0.8 && o.y < s.y + s.h + 0.8)) continue;
+    OBSTACLES.push(o);
+  }
+}
+
+// physics constants
+const V_MAX = 0.5, A_MAX = 0.45, TURN_RATE = 2.6, ARRIVE_R = 0.18, DWELL_S = 5;
+const LOW_V = 4.9, FULL_V = 6.0, EMPTY_V = 4.8, CAP_MAH = 2000;
+const CAM_RANGE = 2.2, CAM_HALF = 0.62;    // camera: 2.2 m range, ~70° total FOV
+
+let S;                       // simulation state
+function newState(battPct) {
+  return {
+    phase: "idle",           // idle|scan|travel|dwell|return|done|lowreturn
+    pos: { x: HOME.x, y: HOME.y }, heading: -Math.PI / 2,
+    speed: 0, accel: 0,
+    route: [], stopIdx: 0,
+    clock: 0, dwellLeft: 0,
+    dist: 0, movingTime: 0, energyWh: 0, usedMah: CAP_MAH * (1 - battPct / 100),
+    accSamples: [], shocks: 0, prevAccel: 0,
+    avoiding: false, avoidEvents: 0, camHit: null,
+    legStart: null, trail: [{ x: HOME.x, y: HOME.y }],
+    history: [],             // {t, v, spd}
+    lowBattFlagged: false,
+  };
+}
+S = newState(100);
+makeObstacles(true);
+
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+function toPx(p) { return { x: p.x * PXM, y: p.y * PXM }; }
+function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+function cameraSee() {          // nearest obstacle inside the camera cone
+  let best = null;
+  for (const o of OBSTACLES) {
+    const d = dist(S.pos, o) - o.r;
+    if (d > CAM_RANGE || d < 0) continue;
+    let ang = Math.atan2(o.y - S.pos.y, o.x - S.pos.x) - S.heading;
+    while (ang > Math.PI) ang -= 2 * Math.PI;
+    while (ang < -Math.PI) ang += 2 * Math.PI;
+    if (Math.abs(ang) < CAM_HALF + o.r / Math.max(d, 0.4)) {
+      if (!best || d < best.d) best = { o, d, ang };
+    }
+  }
+  return best;
+}
+function fmt(x, d = 2) { return x.toFixed(d); }
+
+function voltage() {
+  const soc = Math.max(0, 1 - S.usedMah / CAP_MAH);
+  const oc = EMPTY_V + (FULL_V - EMPTY_V) * soc;
+  const currentA = currentDraw() / 1000;
+  return oc - currentA * 0.45;   // internal resistance sag
+}
+function currentDraw() {         // mA
+  if (S.phase === "idle" || S.phase === "done") return 40;
+  return 40 + 320 * (Math.abs(S.speed) / V_MAX) + 160 * Math.abs(S.accel);
+}
+function logRow(t, ev, leg = "", d = "", tm = "", sp = "", en = "") {
+  const tb = $("logTable").tBodies[0];
+  tb.insertAdjacentHTML("beforeend",
+    `<tr><td>${fmt(t,1)}</td><td>${ev}</td><td>${leg}</td><td>${d}</td><td>${tm}</td><td>${sp}</td><td>${en}</td></tr>`);
+  $("logWrap").scrollTop = 1e9;
+}
+
+// ---------- QR (fake but deterministic pattern from manifest) ----------
+function drawFakeQR(text) {
+  const c = $("qrCanvas").getContext("2d"), N = 25, cell = 160 / N;
+  c.fillStyle = "#fff"; c.fillRect(0, 0, 160, 160);
+  let h = 0;
+  for (const ch of text) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const rnd = () => (h = (h * 1103515245 + 12345) >>> 0) / 4294967296;
+  c.fillStyle = "#000";
+  const finder = (fx, fy) => {
+    c.fillRect(fx * cell, fy * cell, 7 * cell, 7 * cell);
+    c.fillStyle = "#fff"; c.fillRect((fx+1) * cell, (fy+1) * cell, 5 * cell, 5 * cell);
+    c.fillStyle = "#000"; c.fillRect((fx+2) * cell, (fy+2) * cell, 3 * cell, 3 * cell);
+  };
+  finder(0, 0); finder(N - 7, 0); finder(0, N - 7);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const inF = (x < 8 && y < 8) || (x >= N - 8 && y < 8) || (x < 8 && y >= N - 8);
+    if (!inF && rnd() < 0.46) c.fillRect(x * cell, y * cell, cell, cell);
+  }
+}
+
+function newManifest() {
+  const ids = STOPS.map(s => s.name);
+  for (let i = ids.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+  }
+  return ids;
+}
+
+// ---------- simulation step ----------
+function step(dt) {
+  if (S.phase === "idle" || S.phase === "done") { tickIdle(dt); return; }
+  S.clock += dt;
+
+  const target = (S.phase === "return" || S.phase === "lowreturn") ? HOME
+               : STOPS.find(s => s.name === S.route[S.stopIdx]);
+
+  if (S.phase === "travel" || S.phase === "return" || S.phase === "lowreturn") {
+    const d = dist(S.pos, target);
+    let want = Math.atan2(target.y - S.pos.y, target.x - S.pos.x);
+    let avoidSpeedCap = V_MAX;
+    const cam = cameraSee();
+    S.camHit = cam ? cam.d : null;
+    if (cam && cam.d < 1.6) {
+      if (!S.avoiding) {
+        S.avoiding = true; S.avoidEvents++;
+        logRow(S.clock, "CAMERA: obstacle " + fmt(cam.d,1) + " m ahead — avoiding");
+      }
+      const side = cam.ang > 0 ? -1 : 1;      // steer to the clear side
+      want += side * (1.15 - Math.min(cam.d / 1.6, 1) * 0.55);
+      avoidSpeedCap = cam.d < 0.55 ? 0.1 : 0.28;
+    } else if (S.avoiding) {
+      S.avoiding = false;
+      logRow(S.clock, "CAMERA: path clear — resuming route");
+    }
+    let err = want - S.heading;
+    while (err > Math.PI) err -= 2 * Math.PI;
+    while (err < -Math.PI) err += 2 * Math.PI;
+    S.heading += Math.max(-TURN_RATE * dt, Math.min(TURN_RATE * dt, err));
+
+    const desired = Math.min(avoidSpeedCap, Math.max(0.12, Math.sqrt(2 * A_MAX * d)))
+                    * (Math.abs(err) > 0.6 ? 0.3 : 1);
+    const dv = desired - S.speed;
+    S.accel = Math.max(-A_MAX, Math.min(A_MAX, dv / dt));
+    S.speed += S.accel * dt;
+
+    const stepLen = S.speed * dt;
+    const nx = S.pos.x + Math.cos(S.heading) * stepLen;
+    const ny = S.pos.y + Math.sin(S.heading) * stepLen;
+    if (!OBSTACLES.some(o => Math.hypot(nx - o.x, ny - o.y) < o.r + 0.22)) {
+      S.pos.x = nx; S.pos.y = ny;
+    } else { S.speed = 0; }        // emergency stop if cornered
+    S.dist += stepLen;
+    S.movingTime += dt;
+    S.trail.push({ x: S.pos.x, y: S.pos.y });
+    if (S.trail.length > 4000) S.trail.shift();
+
+    S.accSamples.push(S.accel * S.accel);
+    if (Math.abs(S.accel - S.prevAccel) / dt > 3.0) S.shocks++;   // jerk spikes
+    S.prevAccel = S.accel;
+
+    // energy
+    const I = currentDraw() / 1000;
+    S.energyWh += voltage() * I * dt / 3600;
+    S.usedMah += I * 1000 * dt / 3600;
+
+    // low battery check
+    if (!S.lowBattFlagged && voltage() < LOW_V && S.phase === "travel") {
+      S.lowBattFlagged = true;
+      S.phase = "lowreturn";
+      logRow(S.clock, "LOW BATTERY " + fmt(voltage()) + " V — auto return home");
+    }
+
+    if (d < ARRIVE_R) {
+      S.speed = 0;
+      const leg = { d: S.dist - S.legStart.d, t: S.clock - S.legStart.t,
+                    e: S.energyWh - S.legStart.e };
+      const avg = leg.d / leg.t;
+      if (S.phase === "travel") {
+        const name = S.route[S.stopIdx];
+        logRow(S.clock, "ARRIVE " + name, name, fmt(leg.d,1) + " m", fmt(leg.t,1) + " s",
+               fmt(avg) + " m/s", fmt(leg.e,3) + " Wh");
+        S.phase = "dwell"; S.dwellLeft = DWELL_S;
+      } else {
+        logRow(S.clock, S.lowBattFlagged ? "DOCKED (low battery)" : "DOCKED at home",
+               "HOME", fmt(leg.d,1) + " m", fmt(leg.t,1) + " s", fmt(avg) + " m/s", fmt(leg.e,3) + " Wh");
+        finishMission();
+      }
+    }
+  } else if (S.phase === "dwell") {
+    S.dwellLeft -= dt;
+    const I = currentDraw() / 1000;
+    S.energyWh += voltage() * I * dt / 3600;
+    S.usedMah += I * 1000 * dt / 3600;
+    if (S.dwellLeft <= 0) {
+      logRow(S.clock, "DWELL complete (" + DWELL_S + " s)", S.route[S.stopIdx]);
+      S.stopIdx++;
+      if (S.stopIdx >= S.route.length) {
+        S.phase = "return";
+        S.legStart = { d: S.dist, t: S.clock, e: S.energyWh };
+        logRow(S.clock, "All stops done — returning home", "HOME");
+      } else {
+        S.phase = "travel";
+        S.legStart = { d: S.dist, t: S.clock, e: S.energyWh };
+        logRow(S.clock, "DEPART → " + S.route[S.stopIdx], S.route[S.stopIdx]);
+      }
+    }
+  }
+
+  if ((S.history.length === 0) || (S.clock - S.history[S.history.length - 1].t > 0.25))
+    S.history.push({ t: S.clock, v: voltage(), spd: S.speed });
+  if (S.history.length > 2400) S.history.shift();
+}
+function tickIdle(dt) {}
+
+function finishMission() {
+  S.phase = "done";
+  const rms = S.accSamples.length
+    ? Math.sqrt(S.accSamples.reduce((a, b) => a + b, 0) / S.accSamples.length) : 0;
+  logRow(S.clock, "MISSION COMPLETE — total " + fmt(S.dist,1) + " m, " +
+         fmt(S.energyWh,3) + " Wh (" + fmt(S.energyWh / Math.max(S.dist,0.01),3) + " Wh/m), accel RMS " + fmt(rms) +
+         " m/s², " + S.avoidEvents + " obstacle avoidance(s)");
+}
+
+// ---------- rendering ----------
+const ctx = $("map").getContext("2d");
+function draw() {
+  ctx.fillStyle = "#0d1420"; ctx.fillRect(0, 0, W, H);
+  // grid
+  ctx.strokeStyle = "#1c2634"; ctx.lineWidth = 1;
+  for (let x = 0; x <= MW; x++) { ctx.beginPath(); ctx.moveTo(x*PXM,0); ctx.lineTo(x*PXM,H); ctx.stroke(); }
+  for (let y = 0; y <= MH; y++) { ctx.beginPath(); ctx.moveTo(0,y*PXM); ctx.lineTo(W,y*PXM); ctx.stroke(); }
+  // shelves
+  ctx.fillStyle = "#33415588"; ctx.strokeStyle = "#64748b";
+  for (const s of SHELVES) {
+    ctx.fillRect(s.x*PXM, s.y*PXM, s.w*PXM, s.h*PXM);
+    ctx.strokeRect(s.x*PXM, s.y*PXM, s.w*PXM, s.h*PXM);
+  }
+  // obstacles (crates)
+  for (const o of OBSTACLES) {
+    const p = toPx(o), r = o.r * PXM;
+    ctx.fillStyle = "#7c4a12"; ctx.strokeStyle = "#d97706"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = "#d9770666";
+    ctx.beginPath(); ctx.moveTo(p.x - r * 0.7, p.y); ctx.lineTo(p.x + r * 0.7, p.y);
+    ctx.moveTo(p.x, p.y - r * 0.7); ctx.lineTo(p.x, p.y + r * 0.7); ctx.stroke();
+  }
+  // planned route
+  if (S.route.length && S.phase !== "done") {
+    ctx.strokeStyle = "#38bdf844"; ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
+    ctx.beginPath();
+    let from = HOME;
+    const seq = S.phase === "lowreturn" || S.phase === "return" ? [] : S.route.slice(S.stopIdx);
+    for (const name of seq) {
+      const p = STOPS.find(s => s.name === name);
+      ctx.moveTo(from.x*PXM, from.y*PXM); ctx.lineTo(p.x*PXM, p.y*PXM);
+      from = p;
+    }
+    ctx.moveTo(from.x*PXM, from.y*PXM); ctx.lineTo(HOME.x*PXM, HOME.y*PXM);
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  // trail
+  if (S.trail.length > 1) {
+    ctx.strokeStyle = "#f8717188"; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.moveTo(S.trail[0].x*PXM, S.trail[0].y*PXM);
+    for (const p of S.trail) ctx.lineTo(p.x*PXM, p.y*PXM);
+    ctx.stroke();
+  }
+  // home
+  drawMarker(HOME, "#fbbf24", "HOME");
+  // stops
+  for (const s of STOPS) {
+    const done = S.route.length && (S.route.indexOf(s.name) < S.stopIdx ||
+      (S.phase === "done") || (S.phase === "return" && S.route.indexOf(s.name) < S.route.length));
+    drawMarker(s, done ? "#34d39955" : "#34d399", s.name);
+  }
+  // camera cone
+  const moving = S.phase === "travel" || S.phase === "return" || S.phase === "lowreturn";
+  if (moving) {
+    const cp = toPx(S.pos);
+    ctx.fillStyle = S.camHit != null ? "#f8717130" : "#38bdf818";
+    ctx.beginPath(); ctx.moveTo(cp.x, cp.y);
+    ctx.arc(cp.x, cp.y, CAM_RANGE * PXM, S.heading - CAM_HALF, S.heading + CAM_HALF);
+    ctx.closePath(); ctx.fill();
+    if (S.camHit != null) {
+      const cam = cameraSee();
+      if (cam) {
+        const op = toPx(cam.o);
+        ctx.strokeStyle = "#f87171"; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.moveTo(cp.x, cp.y); ctx.lineTo(op.x, op.y); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+  }
+  // AGV
+  const p = toPx(S.pos);
+  ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(S.heading);
+  ctx.fillStyle = S.lowBattFlagged ? "#fbbf24" : "#38bdf8";
+  ctx.beginPath(); ctx.roundRect(-16, -11, 32, 22, 4); ctx.fill();
+  ctx.fillStyle = "#04121c"; ctx.beginPath();
+  ctx.moveTo(14, 0); ctx.lineTo(4, -7); ctx.lineTo(4, 7); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function drawMarker(pt, color, label) {
+  const p = toPx(pt);
+  ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, 7); ctx.fill();
+  ctx.fillStyle = "#dfe6ee"; ctx.font = "bold 12px monospace"; ctx.textAlign = "center";
+  ctx.fillText(label, p.x, p.y - 14);
+}
+
+const cctx = $("chart").getContext("2d");
+function drawChart() {
+  const cw = 320, ch = 110;
+  cctx.fillStyle = "#0d1420"; cctx.fillRect(0, 0, cw, ch);
+  if (S.history.length < 2) return;
+  const t0 = S.history[0].t, t1 = S.history[S.history.length - 1].t;
+  const X = t => (t - t0) / Math.max(t1 - t0, 1) * (cw - 8) + 4;
+  const series = [
+    { key: "v",   color: "#34d399", min: 4.5, max: 6.2 },
+    { key: "spd", color: "#38bdf8", min: -0.1, max: 0.7 },
+  ];
+  for (const s of series) {
+    cctx.strokeStyle = s.color; cctx.lineWidth = 1.5; cctx.beginPath();
+    S.history.forEach((h, i) => {
+      const y = ch - 6 - (h[s.key] - s.min) / (s.max - s.min) * (ch - 12);
+      i ? cctx.lineTo(X(h.t), y) : cctx.moveTo(X(h.t), y);
+    });
+    cctx.stroke();
+  }
+  // low-batt line
+  const yLow = ch - 6 - (LOW_V - 4.5) / 1.7 * (ch - 12);
+  cctx.strokeStyle = "#f8717166"; cctx.setLineDash([4, 4]);
+  cctx.beginPath(); cctx.moveTo(0, yLow); cctx.lineTo(cw, yLow); cctx.stroke(); cctx.setLineDash([]);
+  cctx.fillStyle = "#8b98a9"; cctx.font = "9px monospace";
+  cctx.fillText("green: battery V   blue: speed   red line: 4.9 V threshold", 6, 10);
+}
+
+function updateHud() {
+  const phaseNames = {
+    idle: "IDLE — scan QR to begin", scan: "SCANNING QR…",
+    travel: "TRAVELING", dwell: "DWELLING AT STOP",
+    return: "RETURNING HOME", lowreturn: "LOW BATTERY — RETURN HOME", done: "MISSION COMPLETE",
+  };
+  $("status").textContent = phaseNames[S.phase];
+  $("status").style.color = S.phase === "lowreturn" ? "var(--bad)"
+                          : S.phase === "done" ? "var(--ok)" : "var(--text)";
+  $("tTarget").textContent = S.phase === "return" || S.phase === "lowreturn" ? "HOME"
+    : (S.route[S.stopIdx] || "—");
+  $("tRoute").textContent = S.route.length ? S.route.join(" → ") : "—";
+  $("tDwell").textContent = S.phase === "dwell" ? fmt(Math.max(S.dwellLeft, 0), 1) + " s" : "—";
+  $("tClock").textContent = fmt(S.clock, 1) + " s";
+  $("tSpeed").textContent = fmt(S.speed) + " m/s";
+  $("tDist").textContent = fmt(S.dist, 1) + " m";
+  $("tAvg").textContent = S.movingTime > 0 ? fmt(S.dist / S.movingTime) + " m/s" : "—";
+  const rms = S.accSamples.length
+    ? Math.sqrt(S.accSamples.slice(-400).reduce((a, b) => a + b, 0) / Math.min(S.accSamples.length, 400)) : 0;
+  $("tRms").textContent = fmt(rms) + " m/s²";
+  $("tShock").textContent = S.shocks;
+  const moving = S.phase === "travel" || S.phase === "return" || S.phase === "lowreturn";
+  $("tCam").textContent = S.camHit != null ? "OBSTACLE " + fmt(S.camHit,1) + " m"
+                        : moving ? "CLEAR" : "—";
+  $("tCam").style.color = S.camHit != null ? "var(--bad)" : "var(--ok)";
+  $("tAvoid").textContent = S.avoidEvents;
+  const v = voltage();
+  $("tVolt").textContent = fmt(v) + " V";
+  $("tVolt").style.color = v < LOW_V ? "var(--bad)" : "var(--text)";
+  const pct = Math.max(0, Math.min(1, (v - EMPTY_V) / (FULL_V - EMPTY_V)));
+  $("battFill").style.width = (pct * 100) + "%";
+  $("battFill").style.background = pct < 0.25 ? "var(--bad)" : pct < 0.5 ? "var(--warn)" : "var(--ok)";
+  $("tCurr").textContent = fmt(currentDraw() / 1000) + " A";
+  $("tWh").textContent = fmt(S.energyWh, 3) + " Wh";
+  $("tEff").textContent = S.dist > 0.5 ? fmt(S.energyWh / S.dist, 3) + " Wh/m" : "— Wh/m";
+}
+
+// ---------- controls ----------
+$("scanBtn").onclick = () => {
+  if (S.phase !== "idle") return;
+  makeObstacles($("randObs").checked);
+  S.route = newManifest();
+  const manifest = "ROUTE:" + S.route.join(",");
+  $("qrOverlay").style.display = "flex";
+  drawFakeQR(manifest);
+  $("decoded").textContent = "";
+  logRow(0, "QR SCAN started");
+  setTimeout(() => {
+    $("decoded").textContent = "Decoded → " + manifest;
+    setTimeout(() => {
+      $("qrOverlay").style.display = "none";
+      logRow(0, "QR decoded: " + manifest);
+      S.phase = "travel"; S.stopIdx = 0;
+      S.legStart = { d: 0, t: 0, e: 0 };
+      logRow(0, "DEPART → " + S.route[0], S.route[0]);
+    }, 900);
+  }, 1400);
+};
+$("pauseBtn").onclick = () => {
+  paused = !paused;
+  $("pauseBtn").textContent = paused ? "Resume" : "Pause";
+};
+$("resetBtn").onclick = () => {
+  S = newState(+$("battSlider").value);
+  makeObstacles($("randObs").checked);
+  paused = false;
+  $("pauseBtn").textContent = "Pause";
+  $("logTable").tBodies[0].innerHTML = "";
+};
+$("battSlider").oninput = e => {
+  $("battLabel").textContent = e.target.value + "%";
+  if (S.phase === "idle") S = newState(+e.target.value);
+};
+$("speedSel").onchange = () => {};
+
+// ---------- main loop ----------
+let paused = false, last = performance.now();
+function loop(now) {
+  const real = Math.min((now - last) / 1000, 0.1); last = now;
+  if (!paused) step(real * +$("speedSel").value);
+  draw(); drawChart(); updateHud();
+  $("pauseBtn").disabled = S.phase === "idle";
+  $("scanBtn").disabled = S.phase !== "idle";
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

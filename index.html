@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The MicroLab | Student Code Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-950/60 backdrop-blur sticky top-0 z-10">
+    <div class="max-w-5xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-emerald-400 tracking-tight">⚡ The MicroLab Code Hub</h1>
+        <p class="text-sm text-slate-400">Ready-to-run ESP32, MicroPython & C++ sensor and robotics code</p>
+      </div>
+      <input id="search" type="text" placeholder="Search sensors or projects (e.g. DHT10)..." 
+        class="w-full sm:w-72 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500">
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-5xl mx-auto px-6 py-8">
+    <div id="status" class="text-slate-400 text-sm mb-6">Loading latest student modules from GitHub...</div>
+    <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+  </main>
+
+  <!-- Code Preview & Copy Modal -->
+  <div id="code-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-700 rounded-xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-800">
+        <h3 id="modal-title" class="font-mono text-emerald-400 font-semibold"></h3>
+        <div class="flex gap-3">
+          <button id="copy-btn" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-4 py-1.5 rounded-lg text-sm transition">
+            📋 Copy Code
+          </button>
+          <button onclick="closeModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-sm">
+            ✕ Close
+          </button>
+        </div>
+      </div>
+      <pre class="p-6 overflow-auto text-xs sm:text-sm font-mono text-slate-200 bg-slate-950 flex-1 leading-relaxed"><code id="modal-code"></code></pre>
+    </div>
+  </div>
+
+  <script>
+    const GITHUB_USER = "gkhan1234";
+    const GITHUB_REPO = "git-practice-or-esp32-test";
+    // Folders to hide from students:
+    const HIDDEN_ITEMS = ["unsorted", ".git", ".gitignore", "index.html", "README.md", "_do_not_upload", "archive_old", "needs_testing"];
+
+    const grid = document.getElementById("projects-grid");
+    const status = document.getElementById("status");
+    const searchInput = document.getElementById("search");
+    let allFolders = [];
+
+    async function loadProjects() {
+      try {
+        const res = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/`);
+        if (!res.ok) throw new Error("Make sure your GitHub repository is set to PUBLIC in Settings!");
+        const items = await res.json();
+
+        const folders = items.filter(item => item.type === "dir" && !HIDDEN_ITEMS.includes(item.name));
+        
+        for (const folder of folders) {
+          const filesRes = await fetch(folder.url);
+          const files = await filesRes.json();
+          allFolders.push({ name: folder.name, files: files.filter(f => f.type === "file") });
+        }
+
+        status.classList.add("hidden");
+        renderProjects(allFolders);
+      } catch (err) {
+        status.innerHTML = `<div class="bg-amber-950/60 border border-amber-700 text-amber-200 p-4 rounded-lg">
+          ⚠️ <b>Almost ready!</b> ${err.message} Once your repo is Public and you push a project folder (like <code>DHT10 Code</code>), it will appear here automatically.
+        </div>`;
+      }
+    }
+
+    function renderProjects(folders) {
+      grid.innerHTML = "";
+      if (folders.length === 0) {
+        grid.innerHTML = `<p class="text-slate-400 col-span-2">No student project folders found yet. Make sure you pushed your <b>DHT10 Code</b> folder!</p>`;
+        return;
+      }
+
+      folders.forEach(folder => {
+        const card = document.createElement("div");
+        card.className = "bg-slate-800/70 border border-slate-700/80 rounded-xl p-6 flex flex-col justify-between shadow-lg";
+
+        const fileRows = folder.files.map(file => `
+          <div class="flex items-center justify-between bg-slate-900/90 border border-slate-800 px-3.5 py-2.5 rounded-lg mt-2">
+            <span class="font-mono text-sm text-slate-200 truncate pr-2">📄 ${file.name}</span>
+            <div class="flex gap-2 shrink-0">
+              <button onclick="viewCode('${file.name}', '${file.download_url}')" 
+                class="bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 px-2.5 py-1 rounded text-xs font-medium transition">
+                👁️ View / Copy
+              </button>
+              <a href="${file.download_url}" download="${file.name}" target="_blank"
+                class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-2.5 py-1 rounded text-xs font-semibold transition">
+                ⬇️ Download
+              </a>
+            </div>
+          </div>
+        `).join("");
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-lg font-bold text-white flex items-center gap-2">📁 ${folder.name}</h2>
+              <span class="text-xs bg-emerald-950 text-emerald-300 border border-emerald-800 px-2.5 py-0.5 rounded-full">
+                ${folder.files.length} files
+              </span>
+            </div>
+            <div class="space-y-2">${fileRows}</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    async function viewCode(filename, url) {
+      const modal = document.getElementById("code-modal");
+      const title = document.getElementById("modal-title");
+      const codeEl = document.getElementById("modal-code");
+      const copyBtn = document.getElementById("copy-btn");
+
+      title.textContent = filename;
+      codeEl.textContent = "Loading code...";
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+
+      const res = await fetch(url);
+      const text = await res.text();
+      codeEl.textContent = text;
+
+      copyBtn.onclick = () => {
+        navigator.clipboard.writeText(text);
+        copyBtn.textContent = "✅ Copied!";
+        setTimeout(() => copyBtn.textContent = "📋 Copy Code", 2000);
+      };
+    }
+
+    function closeModal() {
+      const modal = document.getElementById("code-modal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    searchInput.addEventListener("input", (e) => {
+      const q = e.target.value.toLowerCase();
+      const filtered = allFolders.filter(f => 
+        f.name.toLowerCase().includes(q) || f.files.some(file => file.name.toLowerCase().includes(q))
+      );
+      renderProjects(filtered);
+    });
+
+    loadProjects();
+  </script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+{
+  "filename": "DP-35VCR - 3X5 262591.pdf",
+  "filepath": "/Users/thenationalflagcompany/Documents/ghostscript/input/DP-35VCR - 3X5 262591.pdf",
+  "timestamp": "2026-09-24 12:15:44",
+  "status": "PASSED",
+  "validation": {
+    "passed": true,
+    "dimensions_checked": false,
+    "mediabox_valid": "SKIPPED",
+    "fonts_all_embedded": true,
+    "failure_reasons": []
+  },
+  "target_dimensions": {
+    "dimensions_checked": false,
+    "width_inches": null,
+    "height_inches": null,
+    "orientation_swap_allowed": null
+  },
+  "mediabox": {
+    "width_inches": 59.5,
+    "height_inches": 40.0,
+    "width_points": 4284.0,
+    "height_points": 2880.0
+  },
+  "trimbox": {
+    "width_inches": 59.5,
+    "height_inches": 40.0,
+    "width_points": 4284.0,
+    "height_points": 2880.0
+  },
+  "color_spaces": [
+    "DeviceN/Spot",
+    "RGB"
+  ],
+  "color_details": {
+    "images": [],
+    "vector_spaces": [
+      "RGB"
+    ],
+    "spot_color_names": [
+      "PANTONE 116 C",
+      "PANTONE 294 C",
+      "PANTONE 349 C"
+    ]
+  },
+  "fonts": [
+    {
+      "name": "WZYSCA+FuturaStd-Bold",
+      "clean_name": "FuturaStd-Bold",
+      "type": "Type1",
+      "format": "cff",
+      "encoding": "WinAnsiEncoding",
+      "is_subset": true,
+      "is_embedded": true
+    },
+    {
+      "name": "WZYSCA+MachineITCbyBT-Regular",
+      "clean_name": "MachineITCbyBT-Regular",
+      "type": "TrueType",
+      "format": "ttf",
+      "encoding": "WinAnsiEncoding",
+      "is_subset": true,
+      "is_embedded": true
+    }
+  ],
+  "all_fonts_embedded_or_subset": true,
+  "page_count": 1,
+  "pages": [
+    {
+      "page_number": 1,
+      "mediabox": {
+        "inches": {
+          "width": 59.5,
+          "height": 40.0
+        },
+        "points": {
+          "width": 4284.0,
+          "height": 2880.0,
+          "rect": [
+            0.0,
+            0.0,
+            4284.0,
+            2880.0
+          ]
+        }
+      },
+      "trimbox": {
+        "inches": {
+          "width": 59.5,
+          "height": 40.0
+        },
+        "points": {
+          "width": 4284.0,
+          "height": 2880.0,
+          "rect": [
+            0.0,
+            0.0,
+            4284.0,
+            2880.0
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "filename": "DP-1824VCR -18x24 262591.pdf",
+  "filepath": "/Users/thenationalflagcompany/Documents/ghostscript/input/DP-1824VCR -18x24 262591.pdf",
+  "timestamp": "2026-09-24 12:15:45",
+  "status": "PASSED",
+  "validation": {
+    "passed": true,
+    "dimensions_checked": false,
+    "mediabox_valid": "SKIPPED",
+    "fonts_all_embedded": true,
+    "failure_reasons": []
+  },
+  "target_dimensions": {
+    "dimensions_checked": false,
+    "width_inches": null,
+    "height_inches": null,
+    "orientation_swap_allowed": null
+  },
+  "mediabox": {
+    "width_inches": 27.0,
+    "height_inches": 21.0,
+    "width_points": 1944.0,
+    "height_points": 1512.0
+  },
+  "trimbox": {
+    "width_inches": 27.0,
+    "height_inches": 21.0,
+    "width_points": 1944.0,
+    "height_points": 1512.0
+  },
+  "color_spaces": [
+    "DeviceN/Spot",
+    "RGB"
+  ],
+  "color_details": {
+    "images": [],
+    "vector_spaces": [
+      "RGB"
+    ],
+    "spot_color_names": [
+      "PANTONE 123 C",
+      "PANTONE 349 C"
+    ]
+  },
+  "fonts": [
+    {
+      "name": "DTBYWM+FuturaStd-Bold",
+      "clean_name": "FuturaStd-Bold",
+      "type": "Type1",
+      "format": "cff",
+      "encoding": "WinAnsiEncoding",
+      "is_subset": true,
+      "is_embedded": true
+    },
+    {
+      "name": "DTBYWM+MachineITCbyBT-Regular",
+      "clean_name": "MachineITCbyBT-Regular",
+      "type": "TrueType",
+      "format": "ttf",
+      "encoding": "WinAnsiEncoding",
+      "is_subset": true,
+      "is_embedded": true
+    },
+    {
+      "name": "DTBYWM+MyriadPro-Bold",
+      "clean_name": "MyriadPro-Bold",
+      "type": "TrueType",
+      "format": "ttf",
+      "encoding": "WinAnsiEncoding",
+      "is_subset": true,
+      "is_embedded": true
+    }
+  ],
+  "all_fonts_embedded_or_subset": true,
+  "page_count": 1,
+  "pages": [
+    {
+      "page_number": 1,
+      "mediabox": {
+        "inches": {
+          "width": 27.0,
+          "height": 21.0
+        },
+        "points": {
+          "width": 1944.0,
+          "height": 1512.0,
+          "rect": [
+            0.0,
+            0.0,
+            1944.0,
+            1512.0
+          ]
+        }
+      },
+      "trimbox": {
+        "inches": {
+          "width": 27.0,
+          "height": 21.0
+        },
+        "points": {
+          "width": 1944.0,
+          "height": 1512.0,
+          "rect": [
+            0.0,
+            0.0,
+            1944.0,
+            1512.0
+          ]
+        }
+      }
+    }
+  ]
+}

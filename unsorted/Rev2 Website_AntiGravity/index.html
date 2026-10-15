@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Micro Lab — Real Embedded Systems for Engineering & CS Students</title>
+  <meta name="description" content="MicroLab teaches the layer that every physical industry runs on — and builds the confidence that decides who survives an engineering or CS program. Hands-on electronics, ESP32, MicroPython, and industrial sensors.">
+  <link rel="canonical" href="https://themicrolab.org/">
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/design-system.css?v=2.2">
+  <link rel="stylesheet" href="css/layout.css?v=2.2">
+  <link rel="stylesheet" href="css/components.css?v=2.2">
+  
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+</head>
+<body>
+
+  <!-- Site Header -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#home" class="brand-link" aria-label="MicroLab Home">
+        <img src="assets/logo.svg" alt="The Micro Lab Logo" class="brand-logo">
+      </a>
+
+      <!-- Desktop Navigation -->
+      <nav aria-label="Main Navigation" onclick="document.querySelectorAll('dialog').forEach(d => d.close())">
+        <ul class="nav-links">
+          <li><a href="#home" class="nav-link">Home</a></li>
+          <li><a href="#parents" class="nav-link">For Parents <span class="nav-link-badge">ROI</span></a></li>
+          <li><a href="#schools" class="nav-link">For Schools</a></li>
+          <li><a href="#projects" class="nav-link">Build to Solve</a></li>
+          <li><a href="#testbench" class="nav-link">Live Testbench</a></li>
+          <li><a href="#blog" class="nav-link">Project Blog &amp; Q&amp;A <span class="nav-link-badge">Active</span></a></li>
+          <li><a href="#about" class="nav-link">About</a></li>
+          <li><a href="#contact" class="nav-link">Contact</a></li>
+        </ul>
+      </nav>
+
+      <!-- Header Actions -->
+      <div class="header-actions">
+        <button id="search-trigger-btn" class="search-trigger-btn" aria-label="Quick Search">
+          <span>Search...</span>
+          <kbd>⌘K</kbd>
+        </button>
+
+        <button id="theme-toggle-btn" class="icon-btn" aria-label="Toggle Dark or Light Mode" title="Toggle Theme">
+          🌓
+        </button>
+
+        <button id="mobile-menu-btn" class="icon-btn mobile-menu-btn" aria-label="Open Navigation Menu">
+          ☰
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Slide-in Drawer -->
+  <div id="mobile-drawer" class="mobile-drawer" role="dialog" aria-modal="true" aria-label="Mobile Navigation">
+    <div class="mobile-drawer-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem;">
+        <img src="assets/logo.svg" alt="MicroLab" style="height: 32px;">
+        <button id="mobile-drawer-close" class="modal-close-btn" aria-label="Close Menu" onclick="document.getElementById('mobile-drawer').classList.remove('open')">✕</button>
+      </div>
+      <nav onclick="document.querySelectorAll('dialog').forEach(d => d.close())">
+        <a href="#home" class="mobile-nav-link">Home <span>→</span></a>
+        <a href="#parents" class="mobile-nav-link">For Parents <span>→</span></a>
+        <a href="#schools" class="mobile-nav-link">For Schools &amp; Programs <span>→</span></a>
+        <a href="#projects" class="mobile-nav-link">Build to Solve (Projects) <span>→</span></a>
+        <a href="#testbench" class="mobile-nav-link">ESP32 Live Testbench <span>→</span></a>
+        <a href="#blog" class="mobile-nav-link">Project Blog &amp; Student Q&amp;A <span>→</span></a>
+        <a href="#about" class="mobile-nav-link">About Gary &amp; MicroLab <span>→</span></a>
+        <a href="#contact" class="mobile-nav-link">Contact &amp; Consultations <span>→</span></a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Main Views Container -->
+  <main id="main-content">
+
+    <!-- ===================================================
+         VIEW 1: HOME
+         =================================================== -->
+    <div id="home-view" class="page-view active-view">
+      
+      <!-- Hero -->
+      <section class="section section-hero">
+        <div class="container hero-content">
+          <div class="section-eyebrow">The Physical Computing Layer</div>
+          <h1 class="hero-headline">
+            A car has over a hundred computers in it.<br>
+            <span class="highlight">Your kid can learn to program one.</span>
+          </h1>
+          <p class="hero-subhead">
+            Students ages 11–17 build working sensor systems, grow-light controllers, and mobile dashboards, using the exact microcontrollers found in hospitals, factories, and cars.
+          </p>
+          <div class="hero-cta-group">
+            <a href="#parents" class="btn btn-primary">For Parents (De-Risk Tuition)</a>
+            <a href="#schools" class="btn btn-secondary">For Schools &amp; Community Centers</a>
+            <a href="#projects" class="btn btn-cyan">Explore Industrial Projects</a>
+          </div>
+
+          <div class="hero-claim-card">
+            <div class="hero-claim-icon">⚡</div>
+            <div class="hero-claim-text">
+              <strong>Core Mission:</strong> MicroLab teaches the layer that every physical industry runs on — and builds the confidence that decides who survives an engineering or CS program.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: The Missing On-Ramp -->
+      <section class="section">
+        <div class="container">
+          <div class="problem-grid">
+            <div class="problem-card-box">
+              <div class="section-eyebrow" style="margin-bottom: 1.25rem;">The Broken Transition</div>
+              <h2 style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1.25rem; line-height: 1.2;">
+                The on-ramp closed.<br>And it closed unevenly.
+              </h2>
+              <div class="problem-paragraphs">
+                <p>
+                  Shop class disappeared from most schools between the 1990s and 2010s as standardized testing requirements crowded the timetable. At the same time, consumer products stopped being openable.
+                </p>
+                <p>
+                  The result is students arriving at college engineering programs having never used a screwdriver or touched a circuit board — not because they are less capable, but because our educational system removed the entry point.
+                </p>
+                <p>
+                  And it was removed unevenly: it still exists for families who can buy expensive maker kits or afford private robotics teams. MicroLab restores that critical on-ramp for everyone.
+                </p>
+              </div>
+            </div>
+
+            <div class="problem-stats-stack">
+              <div class="stat-item">
+                <div class="stat-number">40%+</div>
+                <div class="stat-detail">
+                  <h4>College Engineering &amp; CS Attrition</h4>
+                  <p>National studies show over 40% of STEM entrants switch majors, primarily due to a lack of early self-efficacy and mismatch between theory and physical reality.</p>
+                </div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number">100%</div>
+                <div class="stat-detail">
+                  <h4>Physically Grounded Systems</h4>
+                  <p>Embedded systems powering medical hardware, vehicles, and automation cannot be offshored or replaced by generic web code.</p>
+                </div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number">Day 1</div>
+                <div class="stat-detail">
+                  <h4>Belief Built Through Independent Action</h4>
+                  <p>The first wire placed without supervision and the first code edit seen on an OLED screen build the belief that decides who persists in engineering.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Where These Skills Go (10 Industries) -->
+      <section class="section" style="background: var(--bg-surface-elevated);">
+        <div class="container">
+          <div class="section-header">
+            <div class="section-eyebrow">Durable Engineering Work</div>
+            <h2 class="section-title">Where These Skills Go</h2>
+            <p class="section-subtitle">
+              Embedded systems are where the durable, irreplaceable jobs exist. Not generalist apps, but the mission-critical hardware powering physical civilization.
+            </p>
+          </div>
+
+          <div id="industries-grid" class="industries-grid">
+            <!-- Rendered by js/app.js -->
+          </div>
+
+          <div class="industry-callout-banner">
+            The same ESP32 microcontroller and the same wiring skills show up in a <strong>hospital</strong>, a <strong>factory</strong>, a <strong>car</strong>, and a <strong>data centre</strong>.
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: The Moment ("Mom is cool") -->
+      <section class="section">
+        <div class="container">
+          <div class="moment-box">
+            <div class="moment-text">
+              <div class="section-eyebrow">The Pedagogy</div>
+              <h3>The Breakthrough Moment</h3>
+              <p>
+                A student sits over a breadboard. For the first hour, she follows the wiring diagram step by step, unsure whether this subject belongs to her.
+              </p>
+              <p>
+                Then comes the challenge: change the code so the display prints something of her own choosing. She navigates the MicroPython string function, types <em>mom is cool</em> onto the OLED screen, and uploads it.
+              </p>
+              <p>
+                The screen lights up. She jumps out of her seat and calls her mother over across the room to look. That's the exact moment engineering stops being someone else's discipline.
+              </p>
+            </div>
+
+            <div class="oled-preview">
+              <div class="oled-bezel">
+                <span>SSD1306 OLED 128x64</span>
+                <span>I2C ADDR: 0x3C</span>
+              </div>
+              <div class="oled-screen">
+                <div class="oled-text">mom is cool</div>
+                <div class="oled-subtext">&gt; MicroPython on ESP32 running</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5: Proof & Community Tracks -->
+      <section class="section" style="background: var(--bg-surface);">
+        <div class="container">
+          <div class="section-header">
+            <div class="section-eyebrow">Track Record</div>
+            <h2 class="section-title">Proven in Cincinnati Classrooms</h2>
+            <p class="section-subtitle">
+              MicroLab operates direct cohorts across Cincinnati Community Learning Centers, event spaces, and youth organizations.
+            </p>
+          </div>
+
+          <div class="proof-strip">
+            <div class="proof-item">
+              <div class="proof-value">500+</div>
+              <div class="proof-label">Students Mentored Hands-On</div>
+            </div>
+            <div class="proof-item">
+              <div class="proof-value">20+</div>
+              <div class="proof-label">Years of Engineering Experience</div>
+            </div>
+            <div class="proof-item">
+              <div class="proof-value">6+</div>
+              <div class="proof-label">Turnkey Industrial Modules</div>
+            </div>
+            <div class="proof-item">
+              <div class="proof-value">100%</div>
+              <div class="proof-label">Take-Home Hardware Portfolios</div>
+            </div>
+          </div>
+
+          <div class="partner-pills">
+            <span class="partner-pill">📍 Cincinnati Community Learning Centers (CLCs)</span>
+            <span class="partner-pill">📍 Delhi Event Center</span>
+            <span class="partner-pill">📍 YMCA Youth STEM Programs</span>
+            <span class="partner-pill">📍 Public Library Maker Hubs</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 6: Dual Route CTA -->
+      <section class="section" style="text-align: center;">
+        <div class="container">
+          <div class="section-eyebrow">Choose Your Path</div>
+          <h2 class="section-title" style="margin-bottom: 2rem;">Ready to Build Real Hardware Skills?</h2>
+          <div class="hero-cta-group">
+            <a href="#parents" class="btn btn-primary">I am a Parent Exploring for My Student</a>
+            <a href="#schools" class="btn btn-secondary">I am a School / Program Director</a>
+            <a href="#blog" class="btn btn-cyan">Join Student Lab Q&amp;A</a>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /#home-view -->
+
+
+    <!-- ===================================================
+         VIEW 2: FOR PARENTS (HIGHEST PRIORITY NEW PAGE)
+         =================================================== -->
+    <div id="parents-view" class="page-view">
+      <section class="section section-hero">
+        <div class="container" style="max-width: 920px;">
+          <div class="section-eyebrow">The Parent Investment Guide</div>
+          <h1 class="hero-headline" style="font-size: 3rem;">
+            Is a computer science degree still worth it?
+          </h1>
+          <p class="hero-subhead" style="margin-bottom: 2rem;">
+            An honest look at recent engineering labor data, the real dropout risks, and how MicroLab de-risks your family's college investment.
+          </p>
+
+          <!-- Honest Labor Picture -->
+          <div class="parents-stat-banner">
+            <div class="stat-box-large">
+              <div class="big-num">~6%</div>
+              <h3 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.5rem;">Recent CS Grad Unemployment</h3>
+              <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+                Higher than the average college graduate (~5%) due to generalist entry-level saturation. However, <strong>underemployment remains among the lowest</strong> and starting median pay remains the highest.
+              </p>
+            </div>
+
+            <div class="stat-box-large">
+              <div class="big-num" style="color: var(--status-green);">Embedded</div>
+              <h3 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.5rem;">Where the Demand Shifted</h3>
+              <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">
+                Engineers who understand physical hardware, sensors, firmware, and power distribution are in high demand across automotive, defense, and healthcare.
+              </p>
+            </div>
+          </div>
+
+          <!-- The Attrition Argument -->
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 2.5rem; margin-bottom: 3rem;">
+            <h2 style="font-size: 1.85rem; color: var(--text-primary); margin-bottom: 1rem;">
+              The Real Risk: 40%+ Switch Majors After Spending $40,000+
+            </h2>
+            <p style="font-size: 1.05rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 1.25rem;">
+              Computer Science and Engineering carry one of the highest attrition rates in higher education. University research consistently identifies the root cause: <strong>students arrive with an inaccurate mental picture of what the field actually is</strong>.
+            </p>
+            <div class="attrition-bar-container">
+              <div class="attrition-bar-fill"></div>
+            </div>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">
+              42% of university STEM entrants transfer out or drop out prior to junior year (National Center for Education Statistics).
+            </p>
+          </div>
+
+          <!-- De-risking: Both outcomes are wins -->
+          <h2 style="font-size: 2rem; color: var(--text-primary); text-align: center; margin-bottom: 1rem;">
+            The De-Risking Offer: Both Outcomes Are Wins
+          </h2>
+          <p style="text-align: center; color: var(--text-secondary); max-width: 650px; margin: 0 auto 2.5rem;">
+            A low-cost, hands-on test before thousands of dollars in tuition are committed.
+          </p>
+
+          <div class="wins-grid">
+            <div class="win-card">
+              <div class="win-title">Outcome A: The Student Lights Up</div>
+              <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6;">
+                Your student discovers an authentic appetite for embedded programming, circuits, and problem-solving. They enter college with a <strong>two-year practical head start</strong> and a working GitHub portfolio that sets them apart for internships.
+              </p>
+            </div>
+
+            <div class="win-card win-pivot">
+              <div class="win-title">Outcome B: The Student Discovers It's Not for Them</div>
+              <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6;">
+                Your student realizes they prefer a different discipline. <strong>You just saved your family $20,000 to $60,000</strong> in misdirected college tuition and prevented two years of academic frustration.
+              </p>
+            </div>
+          </div>
+
+          <!-- What their kid leaves with -->
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 2.5rem; margin-bottom: 3rem;">
+            <h3 style="font-size: 1.5rem; color: var(--text-primary); margin-bottom: 1rem;">What Your Student Actually Leaves With</h3>
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.85rem;">
+              <li style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                <span style="color: var(--accent-amber); font-weight: 700;">✓</span>
+                <span style="color: var(--text-secondary);"><strong>Working Hardware:</strong> Fully wired, self-programmed ESP32 sensor systems they keep and demonstrate.</span>
+              </li>
+              <li style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                <span style="color: var(--accent-amber); font-weight: 700;">✓</span>
+                <span style="color: var(--text-secondary);"><strong>Portfolio Proof:</strong> Photographs, circuit diagrams, and documented Git repository code for college admissions and scholarships.</span>
+              </li>
+              <li style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                <span style="color: var(--accent-amber); font-weight: 700;">✓</span>
+                <span style="color: var(--text-secondary);"><strong>Self-Efficacy:</strong> The technical vocabulary and visceral experience of troubleshooting live electronics without panic.</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- What This Is NOT -->
+          <div class="not-list-box">
+            <h4 style="color: var(--text-primary); font-size: 1.15rem; margin-bottom: 0.5rem;">What MicroLab Is Not</h4>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">Setting honest boundaries to protect your time and ours:</p>
+            <ul>
+              <li>❌ Not after-school homework tutoring</li>
+              <li>❌ Not standardized test prep (AP/SAT)</li>
+              <li>❌ Not an admissions consulting trick</li>
+              <li>❌ Not drag-and-drop toy programming</li>
+            </ul>
+          </div>
+
+          <!-- Logistics & Booking CTA -->
+          <div style="text-align: center; background: var(--bg-surface-elevated); border: 1px solid var(--border-highlight); border-radius: var(--radius-lg); padding: 3rem 2rem;">
+            <h3 style="font-size: 1.85rem; color: var(--text-primary); margin-bottom: 0.75rem;">Explore a Session for Your Student</h3>
+            <p style="color: var(--text-secondary); max-width: 580px; margin: 0 auto 2rem;">
+              Ages 11–17 · Cohort sessions held in Cincinnati · All hardware kits and tooling provided.
+            </p>
+            <a href="#contact" class="btn btn-primary" style="font-size: 1.05rem;">Book a 15-Minute Family Consultation</a>
+          </div>
+
+        </div>
+      </section>
+    </div><!-- /#parents-view -->
+
+
+    <!-- ===================================================
+         VIEW 3: FOR SCHOOLS & PROGRAMS
+         =================================================== -->
+    <div id="schools-view" class="page-view">
+      <section class="section section-hero">
+        <div class="container" style="max-width: 960px;">
+          <div class="section-eyebrow">Institutional Partnerships</div>
+          <h1 class="hero-headline" style="font-size: 3rem;">
+            Turnkey Physical Computing for Schools, CLCs &amp; Community Hubs
+          </h1>
+          <p class="hero-subhead">
+            Bring rigorous, career-relevant embedded systems to your students with zero curriculum development burden.
+          </p>
+
+          <div class="problem-grid" style="margin-bottom: 3.5rem;">
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 2rem;">
+              <h3 style="font-size: 1.35rem; color: var(--text-primary); margin-bottom: 1rem;">Complete Turnkey Kits &amp; Hardware</h3>
+              <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6;">
+                We supply organized hardware packs for every student workstation: pre-flashed ESP32 dev boards, industrial ultrasonic sensors, optocoupler relays, calibrated ADC photoresistors, and OLED screens.
+              </p>
+            </div>
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 2rem;">
+              <h3 style="font-size: 1.35rem; color: var(--text-primary); margin-bottom: 1rem;">Facilitator Training &amp; Lesson Plans</h3>
+              <p style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6;">
+                Whether led directly by Gary Khan or co-facilitated by your staff, our comprehensive educator guides and step-by-step troubleshooting cheat sheets make delivery smooth and low-stress.
+              </p>
+            </div>
+          </div>
+
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 2.5rem; margin-bottom: 3rem;">
+            <h3 style="font-size: 1.6rem; color: var(--text-primary); margin-bottom: 1.25rem;">Program Formats</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+              <div style="padding: 1.25rem; background: var(--bg-surface-elevated); border-radius: var(--radius-sm);">
+                <h4 style="color: var(--accent-amber); margin-bottom: 0.4rem;">After-School Cohort</h4>
+                <p style="font-size: 0.88rem; color: var(--text-secondary);">6 to 10-week sequences meeting once or twice weekly at community centers or schools.</p>
+              </div>
+              <div style="padding: 1.25rem; background: var(--bg-surface-elevated); border-radius: var(--radius-sm);">
+                <h4 style="color: var(--accent-cyan); margin-bottom: 0.4rem;">Summer Intensive</h4>
+                <p style="font-size: 0.88rem; color: var(--text-secondary);">1-week immersive physical computing bootcamp resulting in full capstone hardware builds.</p>
+              </div>
+              <div style="padding: 1.25rem; background: var(--bg-surface-elevated); border-radius: var(--radius-sm);">
+                <h4 style="color: var(--status-green); margin-bottom: 0.4rem;">Weekend Workshops</h4>
+                <p style="font-size: 0.88rem; color: var(--text-secondary);">Targeted 3-hour deep dives into sensors, robotics, and industrial automation.</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="text-align: center;">
+            <a href="#contact" class="btn btn-primary" style="font-size: 1.05rem;">Request a School Partnership Proposal</a>
+          </div>
+        </div>
+      </section>
+    </div><!-- /#schools-view -->
+
+
+    <!-- ===================================================
+         VIEW 4: BUILD TO SOLVE (PROJECTS)
+         =================================================== -->
+    <div id="projects-view" class="page-view">
+      <section class="section section-hero">
+        <div class="container">
+          <div class="section-header">
+            <div class="section-eyebrow">Build to Solve Curriculum</div>
+            <h1 class="section-title">Projects Reframed by Industrial Consequence</h1>
+            <p class="section-subtitle">
+              Every project maps a fundamental electrical and software concept directly to its critical role in modern manufacturing, aerospace, robotics, and health systems.
+            </p>
+          </div>
+
+          <!-- Category Filter Bar -->
+          <div class="filter-bar">
+            <button class="filter-pill active" data-category="all">All Projects (6)</button>
+            <button class="filter-pill" data-category="relay">Relay &amp; Power</button>
+            <button class="filter-pill" data-category="analog">Analog &amp; ADC</button>
+            <button class="filter-pill" data-category="distance">Ultrasonic Radar</button>
+            <button class="filter-pill" data-category="environmental">Environmental</button>
+            <button class="filter-pill" data-category="motion">Robotics &amp; Motion</button>
+          </div>
+
+          <!-- Projects Grid (Rendered by js/app.js) -->
+          <div id="projects-grid" class="projects-grid"></div>
+        </div>
+      </section>
+    </div><!-- /#projects-view -->
+
+
+    <!-- ===================================================
+         VIEW 5: LIVE ESP32 INDUSTRIAL TESTBENCH
+         =================================================== -->
+    <div id="testbench-view" class="page-view">
+      <section class="section section-hero">
+        <div class="container">
+          <div class="section-header">
+            <div class="section-eyebrow">Interactive Hardware Testbench</div>
+            <h1 class="section-title">Live ESP32 REPL &amp; Circuit Simulator</h1>
+            <p class="section-subtitle">
+              Experience the physical software loop in real time. Adjust the sensors below to simulate how the ESP32 executes real-time telemetry, triggers industrial alerts, and streams serial data.
+            </p>
+          </div>
+
+          <div class="testbench-wrapper">
+            <div class="testbench-header">
+              <div class="testbench-title-group">
+                <span style="font-weight: 700; font-size: 1rem; color: var(--text-primary);">ESP32-WROOM-32 Virtual Workstation</span>
+                <span class="testbench-status-badge">
+                  <span class="status-pulse-dot"></span>
+                  CONNECTED · 115200 BAUD
+                </span>
+              </div>
+              <div class="testbench-tabs">
+                <button id="tb-tab-hardware" class="tb-tab-btn active">Hardware Controls</button>
+                <button id="tb-tab-code" class="tb-tab-btn">MicroPython Source</button>
+              </div>
+            </div>
+
+            <div class="testbench-body">
+              <!-- Left: Virtual Board & Controls -->
+              <div id="tb-view-hardware" class="virtual-bench">
+                <div class="virtual-mcu-card">
+                  <div class="mcu-chip-header">
+                    <span>XTENSA DUAL-CORE 240MHz</span>
+                    <span>3.3V LOGIC</span>
+                  </div>
+                  <div class="mcu-led-row">
+                    <div class="led-indicator active-green" id="tb-led-power">
+                      <div class="led-bulb"></div>
+                      <span class="led-label">PWR (3V3)</span>
+                    </div>
+                    <div class="led-indicator" id="tb-led-heartbeat">
+                      <div class="led-bulb"></div>
+                      <span class="led-label">D19 (Loop)</span>
+                    </div>
+                    <div class="led-indicator" id="tb-led-alert">
+                      <div class="led-bulb"></div>
+                      <span class="led-label">D18 (Alert)</span>
+                    </div>
+                    <div class="led-indicator" id="tb-led-night">
+                      <div class="led-bulb"></div>
+                      <span class="led-label">D2 (Night)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="virtual-controls">
+                  <!-- Control 1: HC-SR04 Distance -->
+                  <div class="control-card">
+                    <div class="control-label-group">
+                      <span class="control-name">📡 Ultrasonic Proximity (HC-SR04)</span>
+                      <span id="tb-val-distance" class="control-badge">45 cm</span>
+                    </div>
+                    <input type="range" id="tb-distance-slider" class="control-slider" min="2" max="250" value="45">
+                    <div class="control-hint">
+                      <span>2 cm (Collision Zone)</span>
+                      <span>Threshold: &lt; 20 cm alerts</span>
+                      <span>250 cm (Clear)</span>
+                    </div>
+                  </div>
+
+                  <!-- Control 2: Photoresistor ADC -->
+                  <div class="control-card">
+                    <div class="control-label-group">
+                      <span class="control-name">💡 LDR Ambient Lux (12-bit ADC)</span>
+                      <span id="tb-val-light" class="control-badge">78%</span>
+                    </div>
+                    <input type="range" id="tb-light-slider" class="control-slider" min="0" max="100" value="78">
+                    <div class="control-hint">
+                      <span>0% (Dark room)</span>
+                      <span>Raw ADC: <strong id="tb-val-adc-raw" style="color: var(--accent-amber);">3194</strong></span>
+                      <span>100% (Direct sun)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Left Code Tab (Initially Hidden) -->
+              <div id="tb-view-code" class="testbench-code-view">
+                <pre><code># MicroPython Live Process Loop (Running on Core 1)
+from machine import Pin, ADC, time_pulse_us
+import time
+
+# Pin Definitions
+led_alert = Pin(18, Pin.OUT)
+led_night = Pin(2, Pin.OUT)
+led_heartbeat = Pin(19, Pin.OUT)
+adc_light = ADC(Pin(34))
+adc_light.atten(ADC.ATTN_11DB)
+
+trig = Pin(5, Pin.OUT)
+echo = Pin(18, Pin.IN)
+
+print("[BOOT] Industrial supervisor thread started.")
+
+while True:
+    # 1. Heartbeat toggle
+    led_heartbeat.value(not led_heartbeat.value())
+
+    # 2. Sample 12-bit ADC
+    raw_adc = adc_light.read()
+    light_pct = (raw_adc / 4095.0) * 100
+    if light_pct &lt; 30.0:
+        led_night.value(1) # Engage auxiliary lighting
+    else:
+        led_night.value(0)
+
+    # 3. Read ultrasonic time-of-flight
+    # Distance &lt; 20 cm triggers active emergency brake
+    time.sleep(1.0)</code></pre>
+              </div>
+
+              <!-- Right: Live REPL Terminal -->
+              <div class="virtual-terminal">
+                <div class="terminal-header">
+                  <span>TERMINAL: /dev/ttyUSB0 (115200 8N1)</span>
+                  <div class="terminal-actions">
+                    <button id="tb-btn-pause" class="term-action-btn">⏸ Pause REPL</button>
+                    <button id="tb-btn-clear" class="term-action-btn">Clear</button>
+                  </div>
+                </div>
+                <div id="tb-terminal-console" class="terminal-console">
+                  <!-- Log lines appended by js/simulator.js -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div><!-- /#testbench-view -->
+
+
+    <!-- ===================================================
+         VIEW 6: PROJECT BLOG & STUDENT LAB Q&A (NEW REQUIREMENT)
+         =================================================== -->
+    <div id="blog-view" class="page-view">
+      <section class="section section-hero">
+        <div class="container">
+          <div class="section-header">
+            <div class="section-eyebrow">Technical Notes &amp; Community Forum</div>
+            <h1 class="section-title">Project Blog &amp; Student Q&amp;A</h1>
+            <p class="section-subtitle">
+              Deep-dive application guides and ongoing project logs. Students post debugging questions, circuit findings, and code adaptations with curated instructor answers.
+            </p>
+          </div>
+
+          <!-- Blog Control & Curation Bar -->
+          <div class="blog-controls-header">
+            <div class="curation-mode-toggle">
+              <div id="curator-toggle-switch" class="toggle-switch" title="Toggle Instructor Mode">
+                <div class="toggle-knob"></div>
+              </div>
+              <span id="curator-status-text">Instructor Curation Mode (OFF)</span>
+            </div>
+
+            <button id="btn-post-new-project" class="btn btn-primary btn-sm">
+              + Post New Project Update
+            </button>
+          </div>
+
+          <!-- Blog Posts Grid (Rendered by js/app.js) -->
+          <div id="blog-grid" class="blog-grid"></div>
+
+        </div>
+      </section>
+    </div><!-- /#blog-view -->
+
+
+    <!-- ===================================================
+         VIEW 7: ABOUT GARY & MICROLAB
+         =================================================== -->
+    <div id="about-view" class="page-view">
+      <section class="section section-hero">
+        <div class="container" style="max-width: 920px;">
+          <div class="section-eyebrow">The Origin &amp; The Method</div>
+          <h1 class="hero-headline" style="font-size: 3rem;">
+            Building the Engineers Who Keep Physical Systems Running
+          </h1>
+          
+          <div class="problem-card-box" style="margin-bottom: 3rem;">
+            <div style="display: flex; gap: 2rem; align-items: center; flex-wrap: wrap;">
+              <div style="width: 90px; height: 90px; border-radius: 50%; background: var(--bg-surface-elevated); border: 2px solid var(--accent-amber); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; flex-shrink: 0;">
+                👨‍🏫
+              </div>
+              <div>
+                <h3 style="font-size: 1.5rem; color: var(--text-primary); margin-bottom: 0.25rem;">Gary Khan</h3>
+                <p style="color: var(--accent-amber); font-weight: 600; font-size: 0.95rem;">Founder &amp; Lead Engineer</p>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">20+ Years in Engineering, Microcontroller Architecture &amp; Educational Design</p>
+              </div>
+            </div>
+            <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-subtle); padding-top: 1.5rem; font-size: 1.05rem; color: var(--text-secondary); line-height: 1.7;">
+              <p style="margin-bottom: 1rem;">
+                "I founded MicroLab because I saw first-hand the chasm opening between theoretical classroom instruction and physical reality. Students were graduating high school having memorized calculus formulas and dragged blocks around code scratchpads, but had never held a multimeter, debugged a ground loop, or felt an inrush current brownout."
+              </p>
+              <p style="margin-bottom: 1rem;">
+                "When you write software for a web server and it fails, you get an error message. When you write firmware for a motor and it fails, the motor draws stall current and burns the trace off your PCB. That consequence is what makes embedded systems deeply engaging and durably valuable."
+              </p>
+              <p>
+                "MicroLab is dedicated to giving every young person the entry point into that layer — because our physical world depends on it."
+              </p>
+            </div>
+          </div>
+
+          <!-- Cincinnati Roots -->
+          <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 2.5rem;">
+            <h3 style="font-size: 1.4rem; color: var(--text-primary); margin-bottom: 1rem;">Rooted in the Community</h3>
+            <p style="color: var(--text-secondary); font-size: 0.98rem; line-height: 1.65; margin-bottom: 1rem;">
+              Based in Cincinnati, Ohio, MicroLab operates directly within local Community Learning Centers, YMCAs, libraries, and public community spaces. We believe that physical engineering cannot be learned in isolation through a screen — it requires hands-on mentoring, physical tools, and collaborative lab benches.
+            </p>
+            <a href="#contact" class="btn btn-secondary">Connect with Gary</a>
+          </div>
+
+        </div>
+      </section>
+    </div><!-- /#about-view -->
+
+
+    <!-- ===================================================
+         VIEW 8: CONTACT & CONSULTATIONS
+         =================================================== -->
+    <div id="contact-view" class="page-view">
+      <section class="section section-hero">
+        <div class="container" style="max-width: 820px;">
+          <div class="section-header">
+            <div class="section-eyebrow">Direct Contact &amp; Booking</div>
+            <h1 class="section-title">Book a Conversation</h1>
+            <p class="section-subtitle">
+              Whether you are a parent looking to de-risk your student's college path or an educator seeking a turnkey program, we are ready to connect.
+            </p>
+          </div>
+
+          <div class="question-form-card">
+            <form id="consultation-form">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" for="contact-name">Your Full Name</label>
+                  <input type="text" id="contact-name" placeholder="e.g. Rachel Miller" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="contact-email">Email Address</label>
+                  <input type="email" id="contact-email" placeholder="name@domain.com" required>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" for="contact-type">I am representing:</label>
+                  <select id="contact-type">
+                    <option value="Parent">Parent of a Middle/High School Student</option>
+                    <option value="School">School / District Administrator</option>
+                    <option value="Community">YMCA / Community Learning Center (CLC)</option>
+                    <option value="Student">Undergraduate / College Student</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="contact-location">Location / City</label>
+                  <input type="text" id="contact-location" placeholder="e.g. Cincinnati, OH">
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label class="form-label" for="contact-msg">How can MicroLab help your student or organization?</label>
+                <textarea id="contact-msg" class="form-textarea" placeholder="Tell us about your student's age, interests, or your organization's program goals..."></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%;">
+                Submit Consultation Request
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </div><!-- /#contact-view -->
+
+  </main>
+
+  <!-- ===================================================
+       FAQS ACCORDION SECTION (GLOBAL ON FOOTER)
+       =================================================== -->
+  <section class="section" style="border-top: 1px solid var(--border-subtle); background: var(--bg-surface-elevated);">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-eyebrow">Clarifications</div>
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        <p class="section-subtitle">
+          Direct, concrete answers to the most common questions from parents, educators, and makers.
+        </p>
+      </div>
+
+      <div id="faq-accordion" class="faq-accordion">
+        <!-- Rendered by js/app.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================
+       SITE FOOTER
+       =================================================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <img src="assets/logo.svg" alt="The Micro Lab" style="height: 38px;">
+          <p>
+            MicroLab teaches the layer that every physical industry runs on — and builds the confidence that decides who survives an engineering or CS program.
+          </p>
+          <div class="footer-socials">
+            <a href="https://x.com/MicroLab_org" target="_blank" rel="noopener" class="icon-btn" aria-label="X Twitter">𝕏</a>
+            <a href="https://www.linkedin.com/company/microlabdotorg/" target="_blank" rel="noopener" class="icon-btn" aria-label="LinkedIn">in</a>
+            <a href="https://www.facebook.com/microlab.org/" target="_blank" rel="noopener" class="icon-btn" aria-label="Facebook">f</a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#parents">For Parents</a></li>
+            <li><a href="#schools">For Schools</a></li>
+            <li><a href="#projects">Build to Solve</a></li>
+            <li><a href="#testbench">ESP32 Testbench</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Community</h4>
+          <ul class="footer-links">
+            <li><a href="#blog">Project Blog &amp; Q&amp;A</a></li>
+            <li><a href="#about">About Gary Khan</a></li>
+            <li><a href="#contact">Book Consultation</a></li>
+            <li><a href="https://themicrolab.org" target="_blank" rel="noopener">Official themicrolab.org</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Cincinnati HQ</h4>
+          <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
+            Serving students across Community Learning Centers (CLCs), YMCAs, and regional maker spaces.
+          </p>
+          <div style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent-amber);">
+            STATUS: All Systems Operational
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          &copy; 2026 The Micro Lab (themicrolab.org). All rights reserved.
+        </div>
+        <div style="display: flex; gap: 1.25rem;">
+          <span style="color: var(--text-muted);">Non-profit physical computing initiative</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================================================
+       MODAL 1: PROJECT DETAIL DIALOG
+       =================================================== -->
+  <dialog id="project-modal" class="modal-dialog" closedby="any" aria-labelledby="modal-project-title" onclick="if (event.target === this) window.closeAllModals()">
+    <div class="modal-header">
+      <div>
+        <span id="modal-project-tag" class="project-industry-badge" style="position: static; margin-bottom: 0.35rem; display: inline-block;"></span>
+        <h2 id="modal-project-title" class="modal-title"></h2>
+      </div>
+      <button id="project-modal-close" class="modal-close-btn" aria-label="Close Project Modal" onclick="window.closeAllModals()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div id="modal-project-formula" class="project-consequence-formula"></div>
+
+      <!-- Modal Tabs -->
+      <div class="modal-tabs">
+        <button class="modal-tab-btn active" data-tab="overview">Overview &amp; Industrial Use</button>
+        <button class="modal-tab-btn" data-tab="wiring">Circuit Wiring &amp; Pinout</button>
+        <button class="modal-tab-btn" data-tab="micropython">MicroPython Code (.py)</button>
+        <button class="modal-tab-btn" data-tab="arduino">Arduino C++ (.ino)</button>
+        <button class="modal-tab-btn" data-tab="bom">Bill of Materials (BOM)</button>
+      </div>
+
+      <!-- Tab Content: Overview -->
+      <div class="modal-tab-content" data-tab="overview">
+        <div id="modal-project-overview"></div>
+      </div>
+
+      <!-- Tab Content: Wiring Table -->
+      <div class="modal-tab-content" data-tab="wiring" style="display: none;">
+        <h4 style="margin-bottom: 0.5rem; color: var(--text-primary);">Pin Connection Schematic</h4>
+        <div class="pinout-table-wrapper">
+          <table class="pinout-table">
+            <thead>
+              <tr>
+                <th>Component Pin</th>
+                <th>ESP32 GPIO Pin</th>
+                <th>Wiring Note &amp; Voltage</th>
+              </tr>
+            </thead>
+            <tbody id="modal-pinout-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab Content: MicroPython -->
+      <div class="modal-tab-content" data-tab="micropython" style="display: none;">
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <button id="btn-copy-modal-py" class="btn btn-secondary btn-sm">Copy Code</button>
+          <button id="btn-download-modal-py" class="btn btn-primary btn-sm">Download .py</button>
+        </div>
+        <div class="code-container">
+          <div class="code-header">
+            <span>main.py — MicroPython v1.22+</span>
+          </div>
+          <pre id="modal-code-py" class="code-pre"></pre>
+        </div>
+      </div>
+
+      <!-- Tab Content: Arduino C++ -->
+      <div class="modal-tab-content" data-tab="arduino" style="display: none;">
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <button id="btn-copy-modal-ino" class="btn btn-secondary btn-sm">Copy Code</button>
+          <button id="btn-download-modal-ino" class="btn btn-primary btn-sm">Download .ino</button>
+        </div>
+        <div class="code-container">
+          <div class="code-header">
+            <span>sketch.ino — ESP32 Arduino Core 3.0+</span>
+          </div>
+          <pre id="modal-code-ino" class="code-pre"></pre>
+        </div>
+      </div>
+
+      <!-- Tab Content: BOM -->
+      <div class="modal-tab-content" data-tab="bom" style="display: none;">
+        <h4 style="margin-bottom: 0.5rem; color: var(--text-primary);">Required Hardware Components</h4>
+        <div class="pinout-table-wrapper">
+          <table class="pinout-table">
+            <thead>
+              <tr>
+                <th>Part / Module</th>
+                <th>Quantity</th>
+                <th>Hardware Specification</th>
+              </tr>
+            </thead>
+            <tbody id="modal-bom-body"></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('project-modal').close()">Close Project</button>
+      </div>
+    </div>
+  </dialog>
+
+
+  <!-- ===================================================
+       MODAL 2: BLOG POST & STUDENT Q&A DIALOG
+       =================================================== -->
+  <dialog id="blog-modal" class="modal-dialog" closedby="any" aria-labelledby="modal-blog-title" onclick="if (event.target === this) window.closeAllModals()">
+    <div class="modal-header">
+      <div>
+        <h2 id="modal-blog-title" class="modal-title"></h2>
+        <div id="modal-blog-meta" style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.25rem;"></div>
+      </div>
+      <button id="blog-modal-close" class="modal-close-btn" aria-label="Close Guide" onclick="window.closeAllModals()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Article Body -->
+      <div id="modal-blog-content" style="line-height: 1.7; color: var(--text-secondary); margin-bottom: 2rem;"></div>
+
+      <!-- Discussion & Student Q&A Stream -->
+      <div class="discussion-section">
+        <div class="discussion-header">
+          <h3 class="discussion-title">💬 Student Questions &amp; Lab Notes</h3>
+        </div>
+
+        <div id="modal-comment-list" class="comment-list">
+          <!-- Populated by js/app.js -->
+        </div>
+
+        <!-- Student Submit Form -->
+        <div class="question-form-card">
+          <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">Have a Question or Debugging Challenge on this Project?</h4>
+          <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+            Gary Khan answers questions directly. Submissions appear immediately in the lab thread.
+          </p>
+
+          <form id="student-comment-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="comment-name">Your Name</label>
+                <input type="text" id="comment-name" placeholder="e.g. Jordan Miller" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="comment-role">Student / Maker Level</label>
+                <select id="comment-role">
+                  <option value="Middle School Student">Middle School Student</option>
+                  <option value="High School Student">High School Student</option>
+                  <option value="Pre-Engineering Student">Pre-Engineering Student</option>
+                  <option value="College Freshman/Sophomore">College Freshman / Sophomore</option>
+                  <option value="Educator / Maker">Educator / Community Maker</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label class="form-label" for="comment-text">Your Question or Finding</label>
+              <textarea id="comment-text" class="form-textarea" placeholder="Describe what you observed, what pin you connected, or the error message you received..." required></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <button type="submit" class="btn btn-primary btn-sm">
+                Post Question to Lab Thread
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('blog-modal').close()">
+                Close
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </dialog>
+
+
+  <!-- ===================================================
+       MODAL 3: INSTRUCTOR NEW POST CREATOR
+       =================================================== -->
+  <dialog id="post-new-modal" class="modal-dialog" closedby="any" aria-labelledby="post-new-modal-title" onclick="if (event.target === this) window.closeAllModals()">
+    <div class="modal-header">
+      <h2 id="post-new-modal-title" class="modal-title">Post New Project Update (Curator)</h2>
+      <button type="button" id="post-new-modal-close" class="modal-close-btn" aria-label="Close" onclick="window.closeAllModals()">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="new-project-post-form">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" for="new-post-title">Project Title</label>
+          <input type="text" id="new-post-title" placeholder="e.g. Calibrating Optical Dust Sensors for HVAC Cleanrooms" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" for="new-post-tag">Industry / Category Tag</label>
+          <input type="text" id="new-post-tag" placeholder="e.g. Cleanroom HVAC &amp; Building Automation" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" for="new-post-excerpt">Short Summary Excerpt</label>
+          <input type="text" id="new-post-excerpt" placeholder="1-2 sentences on why this hardware matters in industry...">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label" for="new-post-content">Technical Guide Content (Markdown/Text)</label>
+          <textarea id="new-post-content" class="form-textarea" style="min-height: 180px;" placeholder="Explain the circuit pins, MicroPython code logic, and real manufacturing parallels..." required></textarea>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+          <button type="button" id="post-new-modal-cancel" class="btn btn-secondary" style="flex: 1;" onclick="window.closeAllModals()">
+            Cancel / Close
+          </button>
+          <button type="submit" class="btn btn-primary" style="flex: 1.5;">
+            Publish Project Post to Feed
+          </button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+
+  <!-- ===================================================
+       MODAL 4: SEARCH OMNIBOX (⌘K)
+       =================================================== -->
+  <dialog id="search-modal" class="modal-dialog search-modal" closedby="any" aria-label="Quick Search Omnibox" onclick="if (event.target === this) window.closeAllModals()">
+    <div class="search-input-box">
+      <span style="font-size: 1.2rem; color: var(--accent-amber);">🔍</span>
+      <input type="search" id="omnibox-input" placeholder="Type to search projects, sensors, code, guides..." autocomplete="off">
+      <kbd style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); padding: 0.15rem 0.45rem; border-radius: 4px; font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); cursor: pointer;" onclick="window.closeAllModals()">ESC</kbd>
+      <button type="button" id="search-modal-close" class="modal-close-btn" style="width: 28px; height: 28px; font-size: 0.85rem; flex-shrink: 0;" onclick="window.closeAllModals()" aria-label="Close search">✕</button>
+    </div>
+    <ul id="omnibox-results" class="search-results-list"></ul>
+  </dialog>
+
+  <!-- JavaScript Modules -->
+  <script src="js/data.js?v=2.2"></script>
+  <script src="js/simulator.js?v=2.2"></script>
+  <script src="js/app.js?v=2.2"></script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+{
+  "filename": "WhoDey.pdf",
+  "filepath": "/Users/thenationalflagcompany/Documents/ghostscript/input/WhoDey.pdf",
+  "timestamp": "2026-09-25 15:44:40",
+  "status": "PASSED",
+  "validation": {
+    "passed": true,
+    "dimensions_checked": false,
+    "mediabox_valid": "SKIPPED",
+    "fonts_all_embedded": true,
+    "failure_reasons": []
+  },
+  "target_dimensions": {
+    "dimensions_checked": false,
+    "width_inches": null,
+    "height_inches": null,
+    "orientation_swap_allowed": null
+  },
+  "mediabox": {
+    "width_inches": 60.0,
+    "height_inches": 36.0,
+    "width_points": 4320.0,
+    "height_points": 2592.0
+  },
+  "trimbox": {
+    "width_inches": 60.0,
+    "height_inches": 36.0,
+    "width_points": 4320.0,
+    "height_points": 2592.0
+  },
+  "color_spaces": [
+    "RGB"
+  ],
+  "color_details": {
+    "images": [],
+    "vector_spaces": [
+      "RGB"
+    ],
+    "spot_color_names": []
+  },
+  "fonts": [],
+  "all_fonts_embedded_or_subset": true,
+  "page_count": 1,
+  "pages": [
+    {
+      "page_number": 1,
+      "mediabox": {
+        "inches": {
+          "width": 60.0,
+          "height": 36.0
+        },
+        "points": {
+          "width": 4320.0,
+          "height": 2592.0,
+          "rect": [
+            0.0,
+            0.0,
+            4320.0,
+            2592.0
+          ]
+        }
+      },
+      "trimbox": {
+        "inches": {
+          "width": 60.0,
+          "height": 36.0
+        },
+        "points": {
+          "width": 4320.0,
+          "height": 2592.0,
+          "rect": [
+            0.0,
+            0.0,
+            4320.0,
+            2592.0
+          ]
+        }
+      }
+    }
+  ]
+}
